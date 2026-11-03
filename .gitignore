@@ -1,5 +1,8 @@
 # build output
 dist/
+build/
+.next/
+.output/
 # generated types
 .astro/
 
@@ -7,6 +10,7 @@ dist/
 node_modules/
 
 # logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -26,6 +30,12 @@ pagefind/
 
 # jetbrains setting folder
 .idea/
+
+# tool caches
+.cache/
+.vite/
+.turbo/
+.vercel/
 
 # Keep project notes private; the public README is intentionally included.
 *.md
