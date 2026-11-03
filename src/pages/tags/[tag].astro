@@ -1,0 +1,51 @@
+---
+import { getCollection } from "astro:content";
+import PostList from "../../components/PostList.astro";
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import { getTagSlug } from "../../lib/posts";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("posts");
+  const visiblePosts = posts.filter(
+    (post) => !post.data.draft || post.id.toLowerCase().includes("test"),
+  );
+  const tags = new Map<string, string>();
+
+  for (const post of visiblePosts) {
+    for (const tag of post.data.tags) tags.set(getTagSlug(tag), tag);
+  }
+
+  return [...tags.entries()].map(([slug, tag]) => ({
+    params: { tag: slug },
+    props: {
+      tag,
+      posts: visiblePosts
+        .filter((post) =>
+          post.data.tags.some((postTag) => getTagSlug(postTag) === slug),
+        )
+        .sort(
+          (first, second) =>
+            second.data.pubDate.getTime() - first.data.pubDate.getTime(),
+        ),
+    },
+  }));
+}
+
+const { tag, posts } = Astro.props;
+---
+
+<SiteLayout
+  title={`${tag} | Tags | Nether`}
+  description={`Posts I’ve filed under ${tag}.`}
+>
+  <main class="archive-page tag-page">
+    <header class="archive-header">
+      <a class="post-return" href="/tags/">
+        ← All tags
+      </a>
+      <h1>{tag}</h1>
+      <p>Posts I’ve filed under {tag}.</p>
+    </header>
+    <PostList posts={posts} />
+  </main>
+</SiteLayout>

@@ -1,0 +1,298 @@
+---
+import type { GearItem } from "../data/gear/types";
+
+interface Props {
+  items: GearItem[];
+  title: string;
+  href: string;
+  hook: string;
+  ariaLabel: string;
+}
+
+const { items, title, href, hook, ariaLabel } = Astro.props;
+const sectionId = `gear-banner-${href.replace(/\W+/g, "-").replace(/^-|-$/g, "")}`;
+const uniqueImages = new Map<string, { url: string; alt: string }>();
+for (const item of items) {
+  for (const image of item.images ?? []) {
+    if (image.url && !uniqueImages.has(image.url)) {
+      uniqueImages.set(image.url, { url: image.url, alt: image.alt || `${item.brand} ${item.name}` });
+    }
+  }
+}
+const images = [...uniqueImages.values()];
+---
+
+<section aria-labelledby={`${sectionId}-title`} class="gear-banner-section">
+  <h3 id={`${sectionId}-title`}>{title}</h3>
+  <a
+    aria-label={ariaLabel}
+    class:list={["gear-image-banner", images.length === 0 && "gear-image-banner-empty"]}
+    data-gear-banner
+    data-banner-images={JSON.stringify(images)}
+    href={href}
+  >
+    <span aria-hidden="true" class="gear-image-banner-media">
+      {images.length > 0 ? (
+        <>
+          <img
+            alt=""
+            class="gear-image-banner-frame"
+            data-active="true"
+            data-banner-frame
+            data-banner-index="0"
+            decoding="async"
+            loading="lazy"
+            src={images[0].url}
+          />
+          <img alt="" class="gear-image-banner-frame" data-banner-frame data-banner-index="1" decoding="async" />
+        </>
+      ) : (
+        <span class="gear-image-banner-fallback"></span>
+      )}
+    </span>
+    <span class="gear-image-banner-label">
+      <span>{hook}</span>
+      <svg aria-hidden="true" class="gear-image-banner-arrow" viewBox="0 0 24 24">
+        <path d="M4 12h15m-6-6 6 6-6 6" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" />
+      </svg>
+    </span>
+  </a>
+</section>
+
+<script>
+  interface BannerImage {
+    url: string;
+    alt: string;
+  }
+
+  interface BannerState {
+    root: HTMLElement;
+    images: BannerImage[];
+    deck: number[];
+    failed: Set<string>;
+    currentIndex: number;
+    currentFrame: HTMLImageElement;
+    nextFrame: HTMLImageElement;
+    nextAt: number;
+    visible: boolean;
+  }
+
+  const minimumChangeGap = 3000;
+  let bannerStates: BannerState[] = [];
+  let schedulerTimer = 0;
+  let lastChangeAt = 0;
+  let pausedAt = 0;
+  let lifecycleController: AbortController | undefined;
+  let visibilityObserver: IntersectionObserver | undefined;
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  function shuffleIndexes(length: number, currentIndex: number): number[] {
+    const indexes = Array.from({ length }, (_, index) => index)
+      .filter((index) => index !== currentIndex);
+    for (let index = indexes.length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(Math.random() * (index + 1));
+      [indexes[index], indexes[swapIndex]] = [indexes[swapIndex], indexes[index]];
+    }
+    return indexes;
+  }
+
+  function refillDeck(state: BannerState): void {
+    state.deck = shuffleIndexes(
+      state.images.length,
+      state.currentIndex,
+    ).filter((index) => !state.failed.has(state.images[index].url));
+  }
+
+  function preloadImage(url: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      const image = new Image();
+      image.onload = () => resolve(true);
+      image.onerror = () => resolve(false);
+      image.src = url;
+    });
+  }
+
+  function scheduleNextChange(): void {
+    window.clearTimeout(schedulerTimer);
+    schedulerTimer = 0;
+    if (document.hidden || reducedMotion.matches || bannerStates.length === 0) return;
+
+    const now = Date.now();
+    let nextState: BannerState | undefined;
+    let nextTime = Number.POSITIVE_INFINITY;
+    for (const state of bannerStates) {
+      if (!state.visible || state.images.length < 2 || state.failed.size >= state.images.length) continue;
+      const eligibleTime = Math.max(state.nextAt, lastChangeAt + minimumChangeGap);
+      if (eligibleTime < nextTime) {
+        nextTime = eligibleTime;
+        nextState = state;
+      }
+    }
+    if (!nextState) return;
+
+    schedulerTimer = window.setTimeout(() => {
+      void changeBannerImage(nextState as BannerState);
+    }, Math.max(0, nextTime - now));
+  }
+
+  async function changeBannerImage(state: BannerState): Promise<void> {
+    if (document.hidden || reducedMotion.matches) return;
+    if (state.deck.length === 0) refillDeck(state);
+
+    while (state.deck.length > 0) {
+      const nextIndex = state.deck.shift();
+      if (nextIndex === undefined) break;
+      const nextImage = state.images[nextIndex];
+      if (nextImage.url === state.images[state.currentIndex]?.url) continue;
+      if (document.hidden || reducedMotion.matches || !state.visible) {
+        state.deck.unshift(nextIndex);
+        return;
+      }
+      if (!(await preloadImage(nextImage.url))) {
+        state.failed.add(nextImage.url);
+        continue;
+      }
+      if (document.hidden || reducedMotion.matches || !state.visible) {
+        state.deck.unshift(nextIndex);
+        return;
+      }
+
+      state.nextFrame.alt = "";
+      state.nextFrame.src = nextImage.url;
+      state.nextFrame.dataset.bannerIndex = String(nextIndex);
+      state.nextFrame.dataset.active = "true";
+      state.currentFrame.dataset.active = "false";
+      lastChangeAt = Date.now();
+      state.currentIndex = nextIndex;
+      const previousFrame = state.currentFrame;
+      state.currentFrame = state.nextFrame;
+      state.nextFrame = previousFrame;
+      state.nextAt = lastChangeAt + 10000 + Math.random() * 4000;
+      scheduleNextChange();
+      return;
+    }
+
+    state.nextAt = Date.now() + 10000 + Math.random() * 4000;
+    scheduleNextChange();
+  }
+
+  function startBannerRotations(): void {
+    window.clearTimeout(schedulerTimer);
+    schedulerTimer = 0;
+    visibilityObserver?.disconnect();
+    visibilityObserver = undefined;
+    bannerStates = [];
+    if (reducedMotion.matches) return;
+
+    const states = Array.from(document.querySelectorAll<HTMLElement>("[data-gear-banner]"))
+      .flatMap((root) => {
+        let images: BannerImage[] = [];
+        try {
+          images = JSON.parse(root.dataset.bannerImages ?? "[]") as BannerImage[];
+        } catch {
+          images = [];
+        }
+        const frames = Array.from(root.querySelectorAll<HTMLImageElement>("[data-banner-frame]"));
+        if (images.length < 2 || frames.length < 2) return [];
+        const currentFrame = frames.find((frame) => frame.dataset.active === "true") ?? frames[0];
+        const nextFrame = frames.find((frame) => frame !== currentFrame) ?? frames[1];
+        const state: BannerState = {
+          root,
+          images,
+          deck: [],
+          failed: new Set<string>(),
+          currentIndex: Number(currentFrame.dataset.bannerIndex ?? 0),
+          currentFrame,
+          nextFrame,
+          nextAt: 0,
+          visible: false,
+        };
+        currentFrame.addEventListener("error", () => {
+          state.failed.add(state.images[state.currentIndex]?.url ?? "");
+          state.nextAt = Date.now();
+          scheduleNextChange();
+        }, { once: true });
+        return [state];
+      });
+
+    const now = Date.now();
+    states.forEach(refillDeck);
+    bannerStates = states;
+    lastChangeAt = now - minimumChangeGap;
+
+    if (typeof IntersectionObserver === "undefined") {
+      for (const state of states) {
+        state.visible = true;
+        state.nextAt = now + 10000 + Math.random() * 4000;
+      }
+    } else {
+      visibilityObserver = new IntersectionObserver((entries) => {
+        const observedAt = Date.now();
+        for (const entry of entries) {
+          const state = bannerStates.find((candidate) => candidate.root === entry.target);
+          if (!state) continue;
+          const visible = entry.isIntersecting && entry.intersectionRatio >= 0.35;
+          if (state.visible === visible) continue;
+          state.visible = visible;
+          state.nextAt = visible ? observedAt + 10000 + Math.random() * 4000 : 0;
+        }
+        scheduleNextChange();
+      }, { threshold: 0.35 });
+      for (const state of states) visibilityObserver.observe(state.root);
+    }
+
+    scheduleNextChange();
+  }
+
+  function handleVisibilityChange(): void {
+    if (document.hidden) {
+      pausedAt = Date.now();
+      window.clearTimeout(schedulerTimer);
+      schedulerTimer = 0;
+      return;
+    }
+
+    if (pausedAt > 0) {
+      const pausedDuration = Date.now() - pausedAt;
+      for (const state of bannerStates) {
+        if (state.visible) state.nextAt += pausedDuration;
+      }
+      pausedAt = 0;
+    }
+    scheduleNextChange();
+  }
+
+  function handleMotionPreferenceChange(): void {
+    if (reducedMotion.matches) {
+      window.clearTimeout(schedulerTimer);
+      schedulerTimer = 0;
+      visibilityObserver?.disconnect();
+      visibilityObserver = undefined;
+    } else {
+      startBannerRotations();
+    }
+  }
+
+  function stopBannerRotations(): void {
+    window.clearTimeout(schedulerTimer);
+    schedulerTimer = 0;
+    visibilityObserver?.disconnect();
+    visibilityObserver = undefined;
+    bannerStates = [];
+    lifecycleController?.abort();
+    lifecycleController = undefined;
+  }
+
+  function initializeBannerRotations(): void {
+    stopBannerRotations();
+    lifecycleController = new AbortController();
+    const { signal } = lifecycleController;
+    document.addEventListener("visibilitychange", handleVisibilityChange, { signal });
+    reducedMotion.addEventListener("change", handleMotionPreferenceChange, { signal });
+    startBannerRotations();
+  }
+
+  document.addEventListener("astro:before-swap", stopBannerRotations);
+  document.addEventListener("astro:page-load", initializeBannerRotations);
+  initializeBannerRotations();
+</script>

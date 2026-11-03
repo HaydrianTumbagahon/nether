@@ -1,0 +1,54 @@
+---
+import GearCard from "./GearCard.astro";
+import SortFilterBar from "./SortFilterBar.astro";
+import type { GearItem } from "../data/gear/types";
+
+interface FilterDefinition {
+  key: string;
+  label: string;
+  getValues: (item: GearItem) => string[];
+}
+
+interface Props {
+  items: GearItem[];
+  brands: { name: string }[];
+  filters: FilterDefinition[];
+  listId: string;
+}
+
+const { items, brands, filters, listId } = Astro.props;
+const sortOptions = [
+  { value: "name-asc", label: "Name A to Z" },
+  { value: "score-desc", label: "Score: high to low" },
+  { value: "score-asc", label: "Score: low to high" },
+  { value: "price-asc", label: "Price low to high" },
+  { value: "price-desc", label: "Price high to low" },
+];
+
+---
+
+<SortFilterBar
+  brands={brands.map((brand) => brand.name)}
+  filters={filters}
+  items={items}
+  listId={listId}
+  sortOptions={sortOptions}
+/>
+{items.length > 0 ? (
+  <ol class="keyboard-grid gear-grid" data-stagger id={listId}>
+    {items.map((item) => (
+      <GearCard
+        filterFields={Object.fromEntries(filters.map((filter) => [filter.key, filter.getValues(item)]))}
+        item={item}
+        sortFields={{
+          brand: item.brand,
+          name: item.name,
+          price: item.pricePhp?.min === undefined ? "" : String(item.pricePhp.min),
+          score: String(item.score),
+        }}
+      />
+    ))}
+  </ol>
+) : (
+  <p class="empty-lane">There are no products in this collection yet.</p>
+)}

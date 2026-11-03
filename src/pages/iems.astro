@@ -1,0 +1,37 @@
+---
+import GearDialogController from "../components/GearDialogController.astro";
+import GearGrid from "../components/GearGrid.astro";
+import SiteLayout from "../layouts/SiteLayout.astro";
+import { getIems } from "../data/gear";
+import { iemBrands } from "../data/gear/iems";
+import type { GearItem } from "../data/gear/types";
+
+const iems = getIems();
+
+const filters = [
+  {
+    key: "driver",
+    label: "Driver type",
+    getValues: (item: GearItem) => item.kind === "iem" ? [item.driverConfig] : [],
+  },
+];
+---
+
+<SiteLayout
+  title="IEMs | Nether"
+  description="In-ear monitor notes, reviews, and buying guidance from HADES."
+>
+  <main class="archive-page iem-index-page">
+    <header class="archive-header iem-index-header">
+      <a class="post-return" href="/gear/">← Gear</a>
+      <h1>IEMs</h1>
+      <p>
+        A working list of in-ear monitors, their tuning, technical details, and
+        the trade-offs worth knowing before a purchase.
+      </p>
+    </header>
+
+    <GearGrid brands={iemBrands} filters={filters} items={iems} listId="iem-products" />
+  </main>
+  <GearDialogController />
+</SiteLayout>

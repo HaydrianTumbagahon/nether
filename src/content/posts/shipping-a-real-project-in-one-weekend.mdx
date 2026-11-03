@@ -1,0 +1,48 @@
+---
+title: "Shipping a Real Project in One Weekend"
+description: "A focused playbook for scoping, building, checking, and publishing a small project without endless polishing."
+pubDate: 2026-10-10
+category: web-development
+tags:
+  - project planning
+  - shipping
+  - web development
+---
+
+The pressure to build something “impressive” kept me stuck for months. Then I gave myself permission to ship something small and real in one weekend. That single decision changed my trajectory more than any tutorial. This is the exact playbook I followed, the mistakes I made, and the emotional payoff of finally having something live.
+
+## Choose one real user and one task
+
+Start with a small problem that can be described in one sentence. Name who needs the project and what they should be able to do. A focused page, directory, or reference tool can be complete; it does not need accounts, a database, analytics, or a complex interface unless the task truly depends on them.
+
+Write a short definition of done before coding. Include the main action, the information required, and how you will verify success. Keep optional ideas in a separate list. This prevents a useful project from growing into a vague platform with no clear endpoint.
+
+## Reduce decisions before you start
+
+Use tools you already understand unless a requirement demands something new. Choose a deployment path early, check its constraints, and make a minimal page render before building the full interface. Keep the content and routes small enough that you can review them in one pass.
+
+Decide what you will not build. That may include login, custom animation, a second theme, an admin dashboard, or a settings panel. A deliberate exclusion is not failure; it is how a time-boxed project keeps its promise. If the core task cannot work without a feature, include the smallest version of it instead of adding a more ambitious system.
+
+## Build the vertical slice
+
+Create the complete path for the main task: load the page, show the necessary content, accept the user’s action, and display a clear result. Make the layout responsive as you go rather than leaving mobile behavior to the end. Use semantic HTML, labels, and keyboard focus from the beginning.
+
+If the project handles data, start with the simplest appropriate source and validate inputs at the boundary. Do not add a backend just because web projects often have one. A static file, content collection, or browser-native feature may be enough for the scope.
+
+## Reserve time to check and publish
+
+Before release, run the project’s build and relevant checks. Open the production output or preview, test the main task at a narrow and wide viewport, and navigate with a keyboard. Check empty, error, and loading states that the project actually has. Fix issues that block the task or make content inaccessible; leave cosmetic refinements for a later iteration.
+
+Publish only when the deployment settings are correct and no secrets are included in client code. Test the public URL in a fresh browser session. Confirm assets load, routes work on refresh, and any external service has the intended configuration. Keep a note of anything deliberately postponed so it can be addressed without pretending it was part of the first release.
+
+Prepare a short release note that says what the project does and what remains out of scope. Keep a rollback path, such as the previous deployment or a known-good commit, and know how to disable a broken integration. If a serious issue appears after publishing, reverting the change is often safer than adding an unreviewed patch under pressure. The release is a checkpoint, not a promise that the first version is final.
+
+## Learn from the finished version
+
+Once the project is live, ask someone to try its main task and observe where they hesitate. Fix the clearest problem first. A public URL makes the work concrete, but accountability should support learning rather than turn every project into a portfolio performance. The result can remain small while still demonstrating a complete path from idea to release.
+
+## Key takeaways
+
+- Done is better than perfect when the scope is clear and the core task works.
+- A public URL creates a concrete thing to test and improve.
+- Finishing teaches more than planning indefinitely.

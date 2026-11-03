@@ -1,0 +1,59 @@
+---
+title: "React, Vue, Svelte, Solid: Picking One Without the Panic"
+description: "Compare four popular UI frameworks by mental model, project needs, documentation, and the work you want to do."
+pubDate: 2026-10-13
+category: web-development
+tags:
+  - JavaScript
+  - React
+  - frontend frameworks
+---
+
+The framework wars used to stress me out. Every YouTube video made me feel like I had picked the wrong one. After trying all four seriously, I realized the “best” framework is the one that matches how your brain likes to work and how much time you actually have. This is my personal, no-hype comparison written specifically for people who just graduated and still feel behind.
+
+## Compare the mental models
+
+React builds interfaces from components and commonly uses JSX, where JavaScript expressions appear alongside markup. State is explicit: when state changes, React schedules a render. This model can feel direct if you like describing UI as a function of data, but it asks you to learn its rendering and effect rules.
+
+Vue offers single-file components with template, script, and style sections. Its template syntax is close to HTML, while its reactivity system tracks values used by the interface. Developers who prefer a more structured component file may find that organization comfortable.
+
+Svelte also uses component files, but compiles components into JavaScript that updates the DOM. Its syntax is designed to keep common UI behavior concise. Reactivity details have changed across Svelte versions, so learn the version used by a project rather than mixing examples from different releases.
+
+Solid uses JSX and fine-grained reactivity. Signals are read through accessor functions, and updates can target dependent computations rather than relying on a broad component re-render model. If JSX feels familiar but you want to learn a different reactivity approach, this distinction is worth exploring.
+
+These are starting points, not rankings. Each framework has conventions and edge cases that become clearer through a small project.
+
+## Compare the same tiny feature
+
+Try building the same interactive control in each candidate. For example, React state can look like this:
+
+```jsx
+import { useState } from "react";
+
+function Counter() {
+  const [count, setCount] = useState(0);
+  return <button onClick={() => setCount(count + 1)}>{count}</button>;
+}
+```
+
+The goal is not to compare line counts. Notice what you need to understand to add a label, disable the button, and test the behavior. Does the data flow feel clear? Are errors easy to trace? Do you understand where the state lives?
+
+## Choose for the work in front of you
+
+Look at the project’s existing code, deployment environment, team experience, and maintenance expectations. A framework already used by the team may be a more practical choice than introducing a new one. For a learning project, documentation quality and the availability of examples can matter more than small syntax preferences.
+
+Job markets are real, but they vary by location and change over time. Review current listings in the area and role you care about. Treat that as one input, not a reason to abandon fundamentals. HTML, CSS, JavaScript, accessibility, and debugging skills transfer between frameworks.
+
+## Make the decision reversible
+
+Write down what you need the framework to do, then build one representative feature. Give yourself a clear stopping point: understand the component model, state updates, routing if needed, and how the project is built. If a candidate repeatedly adds friction to the actual task, you have evidence to reconsider it.
+
+Avoid switching because a social post claims another tool is faster or more modern. A switch has a learning cost, and another framework will introduce different trade-offs. Keep a note of unanswered questions and resolve them with documentation or a small experiment instead of starting another tutorial series.
+
+You do not need to predict your permanent choice. Skills and project requirements change. Learn one framework well enough to finish and maintain a project, then evaluate another when there is a concrete reason.
+
+## Key takeaways
+
+- Developer experience matters more than raw benchmarks at the beginning.
+- You can change frameworks later when the project gives you a reason.
+- Community and job-market needs are real factors to investigate.

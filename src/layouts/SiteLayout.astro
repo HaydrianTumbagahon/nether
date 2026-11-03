@@ -1,0 +1,143 @@
+---
+import "../styles/global.css";
+import SiteHeader from "../components/SiteHeader.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+import { site } from "../config/site";
+import { ClientRouter } from "astro:transitions";
+
+interface Props {
+  title?: string;
+  description?: string;
+  canonicalUrl?: string;
+  ogType?: "website" | "article";
+  noindex?: boolean;
+}
+
+const {
+  title = site.name,
+  description = site.tagline,
+  canonicalUrl = new URL(Astro.url.pathname, site.url).href,
+  ogType = "website",
+  noindex = false,
+} = Astro.props;
+const socialImage = new URL("/social-image.svg", site.url).href;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <script is:inline>
+      (() => {
+        const preferenceKey = "nether-theme";
+        const themeWindow = window;
+        const systemTheme = () =>
+          window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+
+        function readTheme() {
+          try {
+            const storedTheme = localStorage.getItem(preferenceKey);
+            if (storedTheme === "light" || storedTheme === "dark") return storedTheme;
+          } catch {
+            return systemTheme();
+          }
+          return systemTheme();
+        }
+
+        function applyTheme(theme) {
+          document.documentElement.dataset.theme = theme;
+          document.querySelectorAll("[data-theme-toggle]").forEach((toggle) => {
+            toggle.setAttribute("aria-pressed", String(theme === "dark"));
+            toggle.setAttribute(
+              "aria-label",
+              `Switch to ${theme === "dark" ? "light" : "dark"} theme`,
+            );
+            toggle.querySelector("[data-theme-moon]")?.classList.toggle("theme-icon-hidden", theme === "dark");
+            toggle.querySelector("[data-theme-sun]")?.classList.toggle("theme-icon-hidden", theme !== "dark");
+          });
+        }
+
+        function syncTheme() {
+          applyTheme(readTheme());
+        }
+
+        syncTheme();
+
+        if (!themeWindow.__netherThemeInitialized) {
+          themeWindow.__netherThemeInitialized = true;
+          document.addEventListener("click", (event) => {
+            if (!(event.target instanceof Element)) return;
+            const toggle = event.target.closest("[data-theme-toggle]");
+            if (!toggle) return;
+
+            const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+            applyTheme(nextTheme);
+            try {
+              localStorage.setItem(preferenceKey, nextTheme);
+            } catch {
+              // Keep the current-page choice even when browser storage is unavailable.
+            }
+          });
+          document.addEventListener("astro:after-swap", syncTheme);
+          document.addEventListener("astro:page-load", syncTheme);
+          document.addEventListener("DOMContentLoaded", syncTheme, { once: true });
+
+          window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+            try {
+              if (localStorage.getItem(preferenceKey) !== "light" && localStorage.getItem(preferenceKey) !== "dark") {
+                syncTheme();
+              }
+            } catch {
+              syncTheme();
+            }
+          });
+        }
+      })();
+    </script>
+    <ClientRouter fallback="swap" />
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={socialImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={socialImage} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    <title>{title}</title>
+  </head>
+  <body class="antialiased">
+    <div aria-hidden="true" class="scroll-edge-overlay scroll-edge-overlay-top"></div>
+    <SiteHeader />
+    <slot />
+    <SiteFooter />
+    <div aria-hidden="true" class="scroll-edge-overlay scroll-edge-overlay-bottom"></div>
+    <button
+      aria-hidden="true"
+      aria-label="Back to top"
+      class="scroll-to-top"
+      data-scroll-to-top
+      data-visible="false"
+      tabindex="-1"
+      type="button"
+    >
+      <svg aria-hidden="true" viewBox="0 0 24 24">
+        <path d="m6 14 6-6 6 6M12 8v12" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" />
+      </svg>
+    </button>
+    <script>
+      import "../scripts/pageTransition";
+      import "../scripts/motion";
+    </script>
+  </body>
+</html>

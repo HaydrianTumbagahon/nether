@@ -1,0 +1,55 @@
+---
+title: "Agents as Teammates, Carefully"
+description: "Use coding agents for bounded tasks while reviewing plans, limiting permissions, and retaining architectural ownership."
+pubDate: 2026-10-04
+category: web-development
+tags:
+  - AI agents
+  - developer workflow
+  - code review
+---
+
+Beyond simple code completion, agent-style tools that can plan and execute multi-step tasks are becoming useful even for juniors. I’ll share what’s actually working today, where they still fall short, and how I’m carefully integrating them into my learning process.
+
+## Give an agent a bounded assignment
+
+An agent can inspect files, propose a plan, make edits, and run commands. That broader access makes task definition important. Describe the desired behavior, the files or subsystem in scope, constraints, and how success will be checked. Ask it to summarize its plan before it changes anything when the task has several steps.
+
+Prefer work that can be reviewed in a small diff: update a component, add a focused test, or explain a failing check. Avoid instructions such as “improve the whole app.” They do not define what should change, and they make it harder to know whether the result is useful.
+
+```text
+Goal: Add an empty state to the existing results list.
+Constraints: Keep the current component API and visual tokens.
+Before editing: identify the component and describe the planned change.
+After editing: run the relevant check and summarize the diff.
+```
+
+## Review the plan before execution
+
+Check whether the plan addresses the actual requirement and respects project conventions. Look for unrelated refactors, new dependencies, broad file changes, or commands that modify data. Narrow the task if the plan includes work you did not ask for. A plausible plan is not a guarantee of correct implementation, but it gives you a chance to catch scope problems early.
+
+An agent may misunderstand a route, infer behavior from an outdated file, or confidently invent an API. Verify important claims in the repository or current documentation. If an assumption affects the architecture, ask for evidence or make the decision yourself.
+
+## Limit permissions and protect information
+
+Grant only the repository and tools required for the task. Review commands before allowing operations that delete files, install dependencies, publish changes, or contact external services. Do not give the agent credentials or private data unless the environment and policy explicitly support that use. Keep secrets in approved secret storage, never in prompts or generated source.
+
+Use version control checkpoints and inspect diffs before accepting changes. A rollback is not a substitute for caution, but a small, reviewable change is easier to recover than a broad automatic rewrite. Avoid auto-committing or deploying until a person has reviewed the result.
+
+## Treat tests as evidence, not proof
+
+Ask the agent to run the check related to its change and read the output. A passing test confirms only the behavior it exercises. Review edge cases, accessibility, error handling, and security-sensitive code yourself. If the task is educational, ask the agent to explain why the change works and what alternatives it considered.
+
+When a command fails, distinguish a task failure from an environment problem. Capture the first meaningful error, inspect the affected code, and decide whether the next action is safe. Do not let an agent repeat commands indefinitely or make broad changes to silence diagnostics.
+
+## Keep the human responsible
+
+Agents can help gather context and reduce routine typing, but they do not own product direction, system boundaries, or the consequences of a release. The developer still decides what belongs in the codebase and whether the result is correct. Use agent output as a proposal to review, not as authority.
+
+For learning, keep a short note of what the agent changed and what you still need to understand. Reimplement a small piece or explain the data flow without the tool when that helps confirm comprehension. That turns multi-step assistance into a chance to learn rather than a way to hide uncertainty.
+
+## Key takeaways
+
+- Treat agents like very junior interns: helpful, but supervised.
+- Review the plan before execution and the diff before acceptance.
+- The human still owns architecture, permissions, and release decisions.

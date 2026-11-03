@@ -1,0 +1,181 @@
+---
+import BuyButtons from "./BuyButtons.astro";
+import IemRemoteMedia from "./IemRemoteMedia.astro";
+import RatingBadge from "./RatingBadge.astro";
+import type { GearItem } from "../data/gear/types";
+
+interface Props {
+  item: GearItem;
+  headingLevel?: 1 | 2;
+  showHeader?: boolean;
+}
+
+const { item, headingLevel = 2, showHeader = false } = Astro.props;
+const Heading = headingLevel === 1 ? "h1" : "h2";
+const excludedFields = new Set([
+  "brand", "name", "tier", "summary", "description", "looks", "pricePhp",
+  "specsStatus", "images", "graphs", "good", "annoying", "insight", "score",
+  "handsOn", "verdict", "verdictLine", "bestFor", "updated", "links",
+]);
+
+function labelFor(key: string): string {
+  return key
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/[_-]+/g, " ")
+    .replace(/^\w/, (letter) => letter.toUpperCase());
+}
+
+function detailRows(key: string, value: unknown): { label: string; value: string }[] {
+  const label = labelFor(key);
+  if (value === undefined || value === null || value === "") {
+    return [{ label, value: "Not listed" }];
+  }
+  if (Array.isArray(value)) {
+    if (value.length === 0) return [{ label, value: "Not listed" }];
+    if (value.every((entry) => entry === null || typeof entry !== "object")) {
+      return [{ label, value: value.map(String).join(", ") }];
+    }
+    return value.flatMap((entry, index) => detailRows(`${key} ${index + 1}`, entry));
+  }
+  if (typeof value === "object") {
+    return Object.entries(value).flatMap(([nestedKey, nestedValue]) =>
+      detailRows(`${key} ${nestedKey}`, nestedValue),
+    );
+  }
+  return [{ label, value: String(value) }];
+}
+
+function priceRange(): string {
+  const price = item.pricePhp;
+  if (!price || !Number.isFinite(price.min) || !Number.isFinite(price.max)) return "Price not listed";
+  if (/unconfirmed|unverified/i.test(price.note ?? "")) return "Price not listed";
+  const format = (amount: number) => `₱${new Intl.NumberFormat("en-PH", { maximumFractionDigits: 0 }).format(amount)}`;
+  const range = price.min === price.max
+    ? format(price.min)
+    : `${format(price.min)}–${format(price.max)}`;
+  return `About ${range}`;
+}
+
+const specRows = Object.entries(item)
+  .filter(([key]) => !excludedFields.has(key))
+  .flatMap(([key, value]) => detailRows(key, value));
+const imageItems = item.images ?? [];
+const graphs = item.kind === "iem" ? item.graphs ?? [] : [];
+const graphItems = graphs.flatMap((graph) => {
+  try {
+    const url = new URL(graph.url);
+    if (url.protocol !== "https:") return [];
+    return [{ ...graph, url: url.href, isImage: /\.(?:avif|gif|jpe?g|png|svg|webp)$/i.test(url.pathname) }];
+  } catch {
+    return [];
+  }
+});
+---
+
+<div class="iem-details gear-data-details">
+  {showHeader && (
+    <header class="iem-detail-header">
+      <p class="iem-detail-brand">{item.brand} · {item.tier}</p>
+      <Heading class="iem-detail-title">{item.name}</Heading>
+      <p class="iem-detail-summary">{item.summary}</p>
+    </header>
+  )}
+
+  <div class="iem-detail-layout">
+    <section aria-label={`Images of ${item.brand} ${item.name}`} class="iem-detail-gallery gear-dialog-gallery">
+      {imageItems.length > 0 ? (
+        imageItems.map((image) => (
+          <figure>
+            <img
+              alt={image.alt.trim() || `${item.brand} ${item.name}`}
+              decoding="async"
+              loading="lazy"
+              src={image.url}
+            />
+            {(image.credit || image.sourcePage) && (
+              <figcaption>
+                {image.credit}
+                {image.credit && image.sourcePage && " · "}
+                {image.sourcePage && (
+                  <a href={image.sourcePage} rel="noopener noreferrer" target="_blank">Image source</a>
+                )}
+              </figcaption>
+            )}
+          </figure>
+        ))
+      ) : (
+        <div class="keyboard-image-empty" role="img" aria-label={`No product image supplied for ${item.brand} ${item.name}`}>
+          No product image supplied
+        </div>
+      )}
+    </section>
+
+    <div class="iem-detail-content">
+      <section aria-label="Product overview" class="iem-detail-section gear-dialog-section">
+        <dl class="iem-detail-specs">
+          <div><dt>Price</dt><dd>{priceRange()}</dd></div>
+          {item.pricePhp?.asOf && <div><dt>Price date</dt><dd>{item.pricePhp.asOf}</dd></div>}
+          {item.pricePhp?.note && <div><dt>Price note</dt><dd>{item.pricePhp.note}</dd></div>}
+          {item.specsStatus && <div><dt>Specs status</dt><dd>{item.specsStatus}</dd></div>}
+          {item.specsStatus !== "verified" && (
+            <div><dt>Verification</dt><dd>These specifications are not verified against an official listing.</dd></div>
+          )}
+          <div><dt>Description</dt><dd>{item.description}</dd></div>
+          <div><dt>Appearance</dt><dd>{item.looks}</dd></div>
+        </dl>
+      </section>
+
+      {specRows.length > 0 && (
+        <section aria-label="Specifications and notes" class="iem-detail-section gear-dialog-section">
+          <h3>Specifications and notes</h3>
+          <dl class="iem-detail-specs">
+            {specRows.map((row) => <div><dt>{row.label}</dt><dd>{row.value}</dd></div>)}
+          </dl>
+        </section>
+      )}
+
+      {graphItems.length > 0 && (
+        <section aria-label="Frequency response" class="iem-detail-section gear-dialog-section iem-frequency-section">
+          <h3>Frequency response</h3>
+          {graphItems.map((graph) => (
+            graph.isImage ? (
+              <IemRemoteMedia
+                alt={`Frequency response graph for ${item.brand} ${item.name}`}
+                caption={[graph.source, graph.note].filter(Boolean).join(" · ")}
+                sourcePage={graph.sourcePage}
+                url={graph.url}
+                variant="graph"
+              />
+            ) : (
+              <a href={graph.url} rel="noopener noreferrer" target="_blank">
+                {graph.source} frequency response source
+              </a>
+            )
+          ))}
+          <p class="iem-measurement-note">
+            Public measurement from community database (Squig.link or equivalent). Actual response varies with tips and seal.
+          </p>
+        </section>
+      )}
+
+      <section aria-label="Rating and review" class="iem-detail-section gear-dialog-section gear-shared-insight">
+        <RatingBadge score={item.score} handsOn={item.handsOn} />
+        <div>
+          <h3>Insight</h3>
+          {item.insight.map((paragraph) => <p>{paragraph}</p>)}
+        </div>
+      </section>
+
+      <dl class="keyboard-review-details">
+        <div><dt>Verdict</dt><dd>{item.verdict}</dd></div>
+        <div><dt>Take</dt><dd>{item.verdictLine}</dd></div>
+        <div><dt>Best for</dt><dd><ul>{item.bestFor.map((use) => <li>{use}</li>)}</ul></dd></div>
+        <div><dt>Good</dt><dd><ul>{item.good.map((point) => <li>{point}</li>)}</ul></dd></div>
+        <div><dt>Trade-offs</dt><dd><ul>{item.annoying.map((point) => <li>{point}</li>)}</ul></dd></div>
+        <div><dt>Updated</dt><dd><time datetime={item.updated}>{item.updated}</time></dd></div>
+      </dl>
+
+      <BuyButtons links={item.links} />
+    </div>
+  </div>
+</div>

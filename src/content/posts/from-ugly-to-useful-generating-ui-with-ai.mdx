@@ -1,0 +1,58 @@
+---
+title: "From Ugly to Useful: Generating UI With AI"
+description: "A practical process for prompting, refining, and reviewing AI-generated interface drafts without trusting them blindly."
+pubDate: 2026-10-25
+category: web-development
+tags:
+  - AI tools
+  - interface design
+  - prototyping
+---
+
+My first attempts at AI-generated interfaces were… rough. Buttons in the wrong places, weird spacing, generic everything. Then I learned how to talk to the tools properly and iterate. This post documents that journey and the exact prompting and refinement process I now use so other juniors can skip the ugly phase.
+
+## Describe the job before the appearance
+
+An interface prompt should explain who the page serves, what task the user needs to complete, and what information must be visible. Add the page type, content hierarchy, and constraints such as keyboard access, mobile behavior, or existing design tokens. Avoid asking only for “a modern, beautiful page”; those words leave too many decisions unspecified.
+
+A useful starting prompt can be concise:
+
+```text
+Create a responsive account settings form.
+Users must update a display name and email address.
+Keep labels visible, show validation beside each field,
+and use the existing CSS variables for colors and spacing.
+Return the component and list assumptions separately.
+```
+
+The goal is a reviewable draft. Ask for the output to identify assumptions, not to conceal them. If key details are unknown, provide real content or ask the assistant to mark the gaps clearly instead of inventing facts.
+
+## Work in passes
+
+Start with structure: headings, navigation, controls, and content order. Check that the page supports the main task before requesting visual refinement. Then adjust layout, spacing, type, and interaction one concern at a time. If the first draft is crowded, ask for a simpler hierarchy rather than a complete redesign with more decoration.
+
+Keep each request specific. “Make it cleaner” is difficult to evaluate. “Keep the primary action beside the form heading on wide screens, and place it after the fields on narrow screens” gives a concrete behavior to inspect. Break a broad page into components only when that makes the code easier to review and reuse.
+
+## Inspect the implementation, not just the preview
+
+Generated markup may look plausible while missing labels, semantic headings, focus styles, loading states, or error behavior. Test the actual controls with a keyboard. Resize the page and check long text, small screens, and zoom. Confirm buttons perform actions, links navigate, and form feedback is understandable.
+
+Review source code before accepting it. Check whether the implementation uses project conventions, introduces a dependency, relies on unsupported APIs, or contains fake content. Run the relevant type checks and tests, then inspect the diff. A screenshot can reveal visual problems, but it does not prove that the interface is accessible or that its behavior works.
+
+## Keep human decisions explicit
+
+The assistant can propose alternatives, but the developer still decides which information matters, which action should be prominent, and how the page handles failure. Compare the draft with the product requirements and existing design system. Remove UI that does not support a user task. Use authentic assets and copy where they are required; do not let invented details pass as real data.
+
+When the tool produces a result that is hard to explain, ask it to describe the component structure or the trade-off behind a layout choice. If the explanation does not match the code, treat that as a reason to inspect further. Do not accept changes simply because they are polished or verbose.
+
+## Version prompts and results
+
+Keep prompts with the task notes or version history when they materially affect the implementation. Record the model or tool context when that is useful and permitted by project policy, along with the accepted changes and the checks run. Avoid storing secrets or private information in prompt history. A short record makes it easier to reproduce a useful draft and understand why a later iteration differs.
+
+AI-assisted UI work is most effective as a cycle: define the task, request a bounded draft, review the result, test the behavior, and refine the specific failure. This gives the tool a useful role without surrendering the design and engineering decisions.
+
+## Key takeaways
+
+- AI can provide a strong first draft, not a finished interface.
+- Human judgment determines hierarchy, content, and quality.
+- Keep prompts and their resulting changes versioned and reviewable.

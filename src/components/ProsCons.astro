@@ -1,0 +1,27 @@
+---
+interface Props {
+  pros: string[];
+  cons: string[];
+}
+
+const { pros, cons } = Astro.props;
+---
+
+<div class="pros-cons">
+  <section aria-labelledby="pros-title">
+    <h3 id="pros-title">What works</h3>
+    <ul>
+      {pros.map((pro) => (
+        <li>{pro}</li>
+      ))}
+    </ul>
+  </section>
+  <section aria-labelledby="cons-title">
+    <h3 id="cons-title">Trade-offs</h3>
+    <ul>
+      {cons.map((con) => (
+        <li>{con}</li>
+      ))}
+    </ul>
+  </section>
+</div>

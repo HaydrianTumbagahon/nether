@@ -1,0 +1,44 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { formatDate, getPostSlug } from "../lib/posts";
+import { site } from "../config/site";
+
+interface Props {
+  posts: CollectionEntry<"posts">[];
+  showCategory?: boolean;
+}
+
+const { posts, showCategory = true } = Astro.props;
+const cleanTitle = (title: string) => title.replace(/^TEST:\s*/i, "");
+---
+
+{posts.length > 0 ? (
+  <ol class="archive-post-list">
+    {posts.map((post) => (
+      <li class="archive-post-row">
+        <article>
+          <div class="archive-post-meta">
+            {showCategory && (
+              <span>
+                {site.categories.find(
+                  (category) => category.slug === post.data.category,
+                )?.label ?? post.data.category}
+              </span>
+            )}
+            <time datetime={post.data.pubDate.toISOString()}>
+              {formatDate(post.data.pubDate)}
+            </time>
+          </div>
+          <h2>
+            <a href={`/blog/${getPostSlug(post)}/`}>
+              {cleanTitle(post.data.title)}
+            </a>
+          </h2>
+          <p>{post.data.description}</p>
+        </article>
+      </li>
+    ))}
+  </ol>
+) : (
+  <p class="empty-lane">I haven’t filed a post here yet.</p>
+)}

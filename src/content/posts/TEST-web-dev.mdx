@@ -1,0 +1,37 @@
+---
+title: "TEST: A small note on browser support"
+description: "I check browser support before I rely on a new platform feature."
+pubDate: 2026-03-12
+category: web-development
+tags:
+  - browser support
+  - web standards
+format: note
+draft: true
+---
+
+I check the support matrix before I reach for a new browser API. A feature can be elegant and still leave a real part of the audience behind.
+
+## Check the current support data
+
+I start with the browsers this project actually needs, then check support data against the feature's fallback behavior.
+
+<Aside>
+  I treat a fallback as part of the feature, not as an afterthought. If the
+  fallback is confusing, I revisit the feature choice.
+</Aside>
+
+## Keep the check repeatable
+
+I keep small support checks close to the code that depends on them.
+
+<figure data-code-filename="src/support.ts">
+  <figcaption>src/support.ts</figcaption>
+
+```ts
+export function supportsViewTransitions(): boolean {
+  return "startViewTransition" in document;
+}
+```
+
+</figure>

@@ -1,0 +1,79 @@
+---
+import { Image } from "astro:assets";
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  post: CollectionEntry<"posts">;
+  aspect?: "landscape" | "portrait";
+  loading?: "eager" | "lazy";
+}
+
+const { post, aspect = "landscape", loading = "lazy" } = Astro.props;
+const aspectClass = aspect === "portrait" ? "aspect-[4/5]" : "aspect-[16/9]";
+const colors = {
+  "web-development": "var(--desk-forest)",
+  peripherals: "var(--desk-accent)",
+} as const;
+const color = colors[post.data.category];
+const seed = Array.from(post.id).reduce(
+  (value, character) =>
+    Math.imul(value ^ character.charCodeAt(0), 16777619) >>> 0,
+  2166136261,
+);
+const marks = Array.from({ length: 10 }, (_, index) => {
+  const value = (seed + Math.imul(index + 1, 2654435761)) >>> 0;
+
+  return {
+    x: 48 + (value % 1104),
+    y: 36 + (Math.floor(value / 1104) % 603),
+    radius: 12 + ((value >>> 10) % 50),
+  };
+});
+---
+
+<div class:list={["overflow-hidden rounded-md", aspectClass]}>
+  {post.data.cover ? (
+    <Image
+      src={post.data.cover}
+      alt={post.data.coverAlt ?? ""}
+      class="block h-full w-full object-cover"
+      width={post.data.cover.width}
+      height={post.data.cover.height}
+      loading={loading}
+    />
+  ) : (
+    <svg
+      aria-hidden="true"
+      class="block h-full w-full"
+      viewBox="0 0 1200 675"
+      xmlns="http://www.w3.org/2000/svg"
+      preserveAspectRatio="xMidYMid slice"
+    >
+      <rect width="1200" height="675" fill="var(--desk-surface)" />
+      <path
+        d={`M0 ${seed % 675} C300 ${marks[0].y}, 820 ${marks[1].y}, 1200 ${marks[2].y}`}
+        fill="none"
+        opacity="0.24"
+        stroke={color}
+        stroke-width="3"
+      />
+      {marks.map((mark) => (
+        <g>
+          <circle
+            cx={mark.x}
+            cy={mark.y}
+            r={mark.radius}
+            fill={color}
+            fill-opacity="0.09"
+          />
+          <path
+            d={`M${mark.x - mark.radius * 1.8} ${mark.y}h${mark.radius * 3.6}`}
+            stroke={color}
+            stroke-opacity="0.35"
+            stroke-width="2"
+          />
+        </g>
+      ))}
+    </svg>
+  )}
+</div>

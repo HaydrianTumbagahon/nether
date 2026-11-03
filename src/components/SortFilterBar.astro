@@ -1,0 +1,552 @@
+---
+import type { GearItem } from "../data/gear/types";
+
+interface SortOption {
+  value: string;
+  label: string;
+}
+
+interface FilterDefinition {
+  key: string;
+  label: string;
+  getValues: (item: GearItem) => string[];
+}
+
+interface Props {
+  items: GearItem[];
+  brands: string[];
+  listId: string;
+  sortOptions: SortOption[];
+  filters: FilterDefinition[];
+}
+
+const { items, brands, listId, sortOptions, filters } = Astro.props;
+const defaultSort = "score-desc";
+
+function normalizeValue(value: string): string {
+  return value.trim().normalize("NFKC").toLocaleLowerCase("en");
+}
+
+function filterOptions(filter: FilterDefinition) {
+  const counts = new Map<string, { label: string; count: number }>();
+  for (const item of items) {
+    for (const label of new Set(filter.getValues(item))) {
+      const value = normalizeValue(label);
+      if (!value) continue;
+      const option = counts.get(value);
+      if (option) option.count += 1;
+      else counts.set(value, { label, count: 1 });
+    }
+  }
+  return [...counts.entries()]
+    .map(([value, option]) => ({ value, ...option }))
+    .sort((first, second) => first.label.localeCompare(second.label, undefined, { sensitivity: "base" }));
+}
+
+const brandFilter: FilterDefinition = {
+  key: "brand",
+  label: "Brand",
+  getValues: (item) => [item.brand],
+};
+const brandCounts = new Map<string, number>();
+for (const item of items) {
+  const key = normalizeValue(item.brand);
+  brandCounts.set(key, (brandCounts.get(key) ?? 0) + 1);
+}
+const brandOptions = brands
+  .map((name) => ({
+    value: normalizeValue(name),
+    label: name,
+    count: brandCounts.get(normalizeValue(name)) ?? 0,
+  }))
+  .filter((option) => option.count > 0)
+  .sort((first, second) => first.label.localeCompare(second.label, undefined, { sensitivity: "base" }));
+const dropdowns: {
+  key: string;
+  label: string;
+  isSort: boolean;
+  options: { value: string; label: string; count?: number }[];
+}[] = [
+  { key: "sort", label: "Sort", isSort: true, options: sortOptions },
+  { ...brandFilter, isSort: false, options: brandOptions },
+  ...filters.map((filter) => ({ ...filter, isSort: false, options: filterOptions(filter) })),
+];
+
+function optionId(key: string, value: string): string {
+  return `gear-option-${listId}-${key}-${value || "all"}`.replace(/[^a-zA-Z0-9_-]/g, "-");
+}
+---
+
+<section
+  aria-label="Sort and filter products"
+  class="gear-sort-filter-bar"
+  data-default-sort={defaultSort}
+  data-gear-sort-filter-bar
+  data-list-id={listId}
+>
+  <div class="gear-dropdown-row">
+    {dropdowns.map((dropdown) => (
+      <div
+        class="gear-dropdown"
+        data-dropdown
+        data-dropdown-default={dropdown.isSort ? defaultSort : ""}
+        data-dropdown-key={dropdown.key}
+        data-dropdown-sort={dropdown.isSort ? "true" : "false"}
+        data-dropdown-value={dropdown.isSort ? defaultSort : ""}
+      >
+        <span class="gear-dropdown-label">{dropdown.label}</span>
+        <button
+          aria-controls={`gear-menu-${listId}-${dropdown.key}`}
+          aria-expanded="false"
+          aria-haspopup="listbox"
+          aria-label={`${dropdown.label}: ${dropdown.isSort ? dropdown.options.find((option) => option.value === defaultSort)?.label : "All"}`}
+          class="gear-dropdown-trigger"
+          data-dropdown-trigger
+          type="button"
+        >
+          <span data-dropdown-current>
+            {dropdown.isSort
+              ? dropdown.options.find((option) => option.value === defaultSort)?.label
+              : "All"}
+          </span>
+          <svg aria-hidden="true" class="gear-dropdown-chevron" viewBox="0 0 16 16">
+            <path d="m3 6 5 5 5-5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" />
+          </svg>
+        </button>
+        <div
+          aria-label={`${dropdown.label} options`}
+          class="gear-dropdown-menu"
+          data-dropdown-menu
+          hidden
+          id={`gear-menu-${listId}-${dropdown.key}`}
+          role="listbox"
+        >
+          {!dropdown.isSort && (
+            <div
+              aria-selected="true"
+              class="gear-dropdown-option"
+              data-dropdown-option
+              data-option-label="All"
+              data-option-value=""
+              id={optionId(dropdown.key, "")}
+              role="option"
+              tabindex="-1"
+            >
+              <span>All</span>
+              <span class="gear-dropdown-option-count">{items.length}</span>
+            </div>
+          )}
+          {dropdown.options.map((option) => (
+            <div
+              aria-selected={dropdown.isSort ? option.value === defaultSort : "false"}
+              class="gear-dropdown-option"
+              data-dropdown-option
+              data-option-label={option.label}
+              data-option-value={option.value}
+              id={optionId(dropdown.key, option.value)}
+              role="option"
+              tabindex="-1"
+            >
+              <span>{option.label}</span>
+              {!dropdown.isSort && <span class="gear-dropdown-option-count">{option.count ?? 0}</span>}
+            </div>
+          ))}
+        </div>
+      </div>
+    ))}
+    <button class="gear-filter-clear" data-clear-gear-filters hidden type="button">
+      Clear all
+    </button>
+  </div>
+
+  <div class="gear-filter-feedback">
+    <p aria-live="polite" class="gear-filter-count" role="status">
+      Showing <strong data-visible-count>{items.length}</strong> of {items.length}
+    </p>
+    <p aria-live="polite" class="gear-filter-active" data-active-filter-count hidden></p>
+  </div>
+
+  <p class="gear-filter-empty" data-sort-filter-empty hidden>
+    No products match these filters.
+    <button data-clear-gear-filters type="button">Clear all</button>
+  </p>
+</section>
+
+<script>
+  interface SortFilterRecord {
+    element: HTMLElement;
+    sortValues: Map<string, string>;
+    filterValues: Map<string, Set<string>>;
+  }
+
+  declare global {
+    interface Window {
+      __netherGearDropdownsInitialized?: boolean;
+    }
+  }
+
+  const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
+  let typeaheadBuffer = "";
+  let typeaheadTimer = 0;
+
+  function normalize(value: string): string {
+    return value.trim().normalize("NFKC").toLocaleLowerCase("en");
+  }
+
+  function getRecords(list: HTMLElement): SortFilterRecord[] {
+    return Array.from(list.querySelectorAll<HTMLElement>("[data-sort-item]"), (element) => {
+      const sortValues = new Map<string, string>();
+      const filterValues = new Map<string, Set<string>>();
+      for (const attribute of Array.from(element.attributes)) {
+        if (attribute.name.startsWith("data-sort-")) {
+          sortValues.set(attribute.name.slice(10), attribute.value);
+        } else if (attribute.name.startsWith("data-filter-")) {
+          filterValues.set(attribute.name.slice(12), new Set(attribute.value.split("|").map(normalize).filter(Boolean)));
+        }
+      }
+      return { element, sortValues, filterValues };
+    });
+  }
+
+  function getDropdowns(root: HTMLElement): HTMLElement[] {
+    return Array.from(root.querySelectorAll<HTMLElement>("[data-dropdown]"));
+  }
+
+  function selectedValue(dropdown: HTMLElement): string {
+    return dropdown.dataset.dropdownValue ?? "";
+  }
+
+  function setSelectedValue(dropdown: HTMLElement, value: string): void {
+    dropdown.dataset.dropdownValue = value;
+    const key = dropdown.dataset.dropdownKey ?? "";
+    const currentOption = Array.from(dropdown.querySelectorAll<HTMLElement>("[data-dropdown-option]"))
+      .find((option) => option.dataset.optionValue === value);
+    const trigger = dropdown.querySelector<HTMLButtonElement>("[data-dropdown-trigger]");
+    const currentLabel = dropdown.querySelector<HTMLElement>("[data-dropdown-current]");
+    if (currentOption && currentLabel) currentLabel.textContent = currentOption.dataset.optionLabel ?? "All";
+    if (trigger) {
+      trigger.setAttribute("aria-label", `${dropdown.querySelector<HTMLElement>(".gear-dropdown-label")?.textContent ?? key}: ${currentOption?.dataset.optionLabel ?? "All"}`);
+    }
+    for (const option of Array.from(dropdown.querySelectorAll<HTMLElement>("[data-dropdown-option]"))) {
+      option.setAttribute("aria-selected", String(option.dataset.optionValue === value));
+    }
+  }
+
+  function positionMenu(trigger: HTMLButtonElement, menu: HTMLElement): void {
+    const triggerRect = trigger.getBoundingClientRect();
+    const margin = 12;
+    const menuWidth = Math.min(Math.max(triggerRect.width, 208), window.innerWidth - margin * 2);
+    menu.style.width = `${menuWidth}px`;
+    menu.style.maxHeight = `${Math.max(140, window.innerHeight * 0.6)}px`;
+    const menuHeight = Math.min(menu.scrollHeight, window.innerHeight * 0.6);
+    const left = Math.min(Math.max(margin, triggerRect.left), window.innerWidth - menuWidth - margin);
+    const below = triggerRect.bottom + 6;
+    const top = below + menuHeight <= window.innerHeight - margin
+      ? below
+      : Math.max(margin, triggerRect.top - menuHeight - 6);
+    menu.style.left = `${left}px`;
+    menu.style.top = `${top}px`;
+  }
+
+  function closeDropdown(dropdown: HTMLElement, restoreFocus = false): void {
+    const menu = dropdown.querySelector<HTMLElement>("[data-dropdown-menu]");
+    const trigger = dropdown.querySelector<HTMLButtonElement>("[data-dropdown-trigger]");
+    if (!menu || menu.hidden) return;
+    menu.dataset.open = "false";
+    trigger?.setAttribute("aria-expanded", "false");
+    window.setTimeout(() => {
+      if (menu.dataset.open === "false") menu.hidden = true;
+    }, 150);
+    if (restoreFocus) trigger?.focus();
+  }
+
+  function closeAllDropdowns(root: HTMLElement, restoreFocus = false): void {
+    for (const dropdown of getDropdowns(root)) closeDropdown(dropdown, restoreFocus);
+  }
+
+  function openDropdown(dropdown: HTMLElement, direction = 0): void {
+    const root = dropdown.closest<HTMLElement>("[data-gear-sort-filter-bar]");
+    const trigger = dropdown.querySelector<HTMLButtonElement>("[data-dropdown-trigger]");
+    const menu = dropdown.querySelector<HTMLElement>("[data-dropdown-menu]");
+    if (!root || !trigger || !menu) return;
+    closeAllDropdowns(root);
+    menu.hidden = false;
+    menu.dataset.open = "true";
+    trigger.setAttribute("aria-expanded", "true");
+    positionMenu(trigger, menu);
+    requestAnimationFrame(() => {
+      positionMenu(trigger, menu);
+      const options = Array.from(menu.querySelectorAll<HTMLElement>("[data-dropdown-option]"));
+      const selectedIndex = options.findIndex((option) => option.dataset.optionValue === selectedValue(dropdown));
+      const focusIndex = direction < 0
+        ? options.length - 1
+        : direction > 0
+          ? Math.max(selectedIndex, 0)
+          : Math.max(selectedIndex, 0);
+      options[focusIndex]?.focus();
+    });
+  }
+
+  function updateUrl(root: HTMLElement, mode: "push" | "replace"): void {
+    const url = new URL(window.location.href);
+    for (const dropdown of getDropdowns(root)) {
+      const key = dropdown.dataset.dropdownKey;
+      if (!key) continue;
+      const value = selectedValue(dropdown);
+      if (dropdown.dataset.dropdownSort === "true") url.searchParams.set("sort", value);
+      else if (value) url.searchParams.set(key, value);
+      else url.searchParams.delete(key);
+    }
+    if (url.href === window.location.href) return;
+    window.history[mode === "push" ? "pushState" : "replaceState"](null, "", `${url.pathname}${url.search}${url.hash}`);
+  }
+
+  function readUrl(root: HTMLElement): void {
+    const params = new URLSearchParams(window.location.search);
+    for (const dropdown of getDropdowns(root)) {
+      const key = dropdown.dataset.dropdownKey;
+      if (!key) continue;
+      const fromUrl = params.get(key);
+      const options = Array.from(dropdown.querySelectorAll<HTMLElement>("[data-dropdown-option]"));
+      const target = dropdown.dataset.dropdownSort === "true"
+        ? fromUrl ?? dropdown.dataset.dropdownDefault ?? ""
+        : fromUrl ?? "";
+      const selected = options.find((option) => option.dataset.optionValue === target);
+      setSelectedValue(dropdown, selected?.dataset.optionValue ?? (dropdown.dataset.dropdownSort === "true" ? dropdown.dataset.dropdownDefault ?? "" : ""));
+    }
+  }
+
+  function updateStatus(root: HTMLElement, visibleCount: number, totalCount: number): void {
+    const count = root.querySelector<HTMLElement>("[data-visible-count]");
+    const empty = root.querySelector<HTMLElement>("[data-sort-filter-empty]");
+    if (count) count.textContent = String(visibleCount);
+    if (empty) empty.hidden = visibleCount > 0;
+
+    const activeFilters = getDropdowns(root).filter((dropdown) =>
+      dropdown.dataset.dropdownSort !== "true" && selectedValue(dropdown) !== "",
+    ).length;
+    const indicator = root.querySelector<HTMLElement>("[data-active-filter-count]");
+    const clearButton = root.querySelector<HTMLButtonElement>("[data-clear-gear-filters]");
+    const sortDropdown = getDropdowns(root).find((dropdown) => dropdown.dataset.dropdownSort === "true");
+    const sortIsDefault = selectedValue(sortDropdown ?? root) === (sortDropdown?.dataset.dropdownDefault ?? "");
+    if (indicator) {
+      indicator.hidden = activeFilters === 0;
+      indicator.textContent = `${activeFilters} ${activeFilters === 1 ? "filter" : "filters"} active`;
+    }
+    if (clearButton) clearButton.hidden = activeFilters === 0 && sortIsDefault;
+
+    const status = count?.closest<HTMLElement>("[role=status]");
+    if (status) status.setAttribute("aria-label", `Showing ${visibleCount} of ${totalCount} products`);
+  }
+
+  function applyState(root: HTMLElement, records: SortFilterRecord[], historyMode?: "push" | "replace"): void {
+    const list = document.getElementById(root.dataset.listId ?? "");
+    if (!list) return;
+    const dropdowns = getDropdowns(root);
+    const sortDropdown = dropdowns.find((dropdown) => dropdown.dataset.dropdownSort === "true");
+    const sortValue = selectedValue(sortDropdown ?? root) || "score-desc";
+    const selected = new Map<string, string>();
+    for (const dropdown of dropdowns) {
+      if (dropdown.dataset.dropdownSort !== "true" && selectedValue(dropdown)) {
+        selected.set(dropdown.dataset.dropdownKey ?? "", normalize(selectedValue(dropdown)));
+      }
+    }
+
+    const visible = records.filter((record) => [...selected].every(([key, value]) => record.filterValues.get(key)?.has(value) ?? false));
+    const previousRects = new Map<HTMLElement, DOMRect>();
+    for (const record of records) {
+      if (!record.element.hidden) previousRects.set(record.element, record.element.getBoundingClientRect());
+    }
+
+    const sorted = [...visible].sort((first, second) => {
+      const firstScore = Number(first.sortValues.get("score") ?? 0);
+      const secondScore = Number(second.sortValues.get("score") ?? 0);
+      let comparison = 0;
+      if (sortValue === "price-asc" || sortValue === "price-desc") {
+        const firstPriceValue = first.sortValues.get("price");
+        const secondPriceValue = second.sortValues.get("price");
+        const firstPrice = Number(firstPriceValue);
+        const secondPrice = Number(secondPriceValue);
+        const firstHasPrice = firstPriceValue?.trim() !== "" && Number.isFinite(firstPrice);
+        const secondHasPrice = secondPriceValue?.trim() !== "" && Number.isFinite(secondPrice);
+        if (firstHasPrice !== secondHasPrice) return firstHasPrice ? -1 : 1;
+        if (firstHasPrice && secondHasPrice) {
+          comparison = sortValue === "price-asc"
+            ? firstPrice - secondPrice
+            : secondPrice - firstPrice;
+        }
+      } else {
+        comparison = sortValue === "score-desc"
+          ? secondScore - firstScore
+          : sortValue === "score-asc"
+            ? firstScore - secondScore
+            : collator.compare(first.sortValues.get("name") ?? "", second.sortValues.get("name") ?? "");
+      }
+      if (comparison !== 0) return comparison;
+      return collator.compare(first.sortValues.get("name") ?? "", second.sortValues.get("name") ?? "");
+    });
+
+    for (const record of records) record.element.hidden = !visible.includes(record);
+    const fragment = document.createDocumentFragment();
+    for (const record of sorted) fragment.append(record.element);
+    list.append(fragment);
+
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      for (const record of sorted) {
+        const previous = previousRects.get(record.element);
+        const current = record.element.getBoundingClientRect();
+        const deltaX = previous ? previous.left - current.left : 0;
+        const deltaY = previous ? previous.top - current.top : 0;
+        const oldTranslate = record.element.style.translate;
+        const oldTransition = record.element.style.transition;
+        const oldOpacity = record.element.style.opacity;
+        if (previous && deltaX === 0 && deltaY === 0) continue;
+        record.element.style.transition = "none";
+        if (previous) record.element.style.translate = `${deltaX}px ${deltaY}px`;
+        else record.element.style.opacity = "0";
+        void record.element.offsetWidth;
+        requestAnimationFrame(() => {
+          record.element.style.transition = oldTransition;
+          record.element.style.translate = oldTranslate || "0px 0px";
+          record.element.style.opacity = oldOpacity || "1";
+          window.setTimeout(() => {
+            record.element.style.translate = oldTranslate;
+            record.element.style.opacity = oldOpacity;
+          }, 190);
+        });
+      }
+    }
+
+    updateStatus(root, sorted.length, records.length);
+    if (historyMode) updateUrl(root, historyMode);
+  }
+
+  function initialize(root: HTMLElement): void {
+    if (root.dataset.initialized === "true") return;
+    const list = document.getElementById(root.dataset.listId ?? "");
+    if (!list) return;
+    const records = getRecords(list);
+    root.dataset.initialized = "true";
+    readUrl(root);
+    updateUrl(root, "replace");
+    applyState(root, records);
+
+    root.addEventListener("click", (event) => {
+      if (!(event.target instanceof Element)) return;
+      const trigger = event.target.closest<HTMLButtonElement>("[data-dropdown-trigger]");
+      if (trigger) {
+        const dropdown = trigger.closest<HTMLElement>("[data-dropdown]");
+        const menu = dropdown?.querySelector<HTMLElement>("[data-dropdown-menu]");
+        if (!dropdown || !menu) return;
+        if (!menu.hidden && menu.dataset.open === "true") closeDropdown(dropdown);
+        else openDropdown(dropdown);
+        return;
+      }
+
+      const option = event.target.closest<HTMLElement>("[data-dropdown-option]");
+      if (option) {
+        const dropdown = option.closest<HTMLElement>("[data-dropdown]");
+        if (!dropdown) return;
+        setSelectedValue(dropdown, option.dataset.optionValue ?? "");
+        closeDropdown(dropdown, true);
+        applyState(root, records, "push");
+        return;
+      }
+
+      if (event.target.closest("[data-clear-gear-filters]")) {
+        for (const dropdown of getDropdowns(root)) {
+          setSelectedValue(dropdown, dropdown.dataset.dropdownSort === "true" ? dropdown.dataset.dropdownDefault ?? "" : "");
+          closeDropdown(dropdown);
+        }
+        applyState(root, records, "push");
+      }
+    });
+
+    root.addEventListener("keydown", (event) => {
+      if (!(event.target instanceof HTMLElement)) return;
+      const trigger = event.target.closest<HTMLButtonElement>("[data-dropdown-trigger]");
+      if (trigger && ["ArrowDown", "ArrowUp"].includes(event.key)) {
+        event.preventDefault();
+        const dropdown = trigger.closest<HTMLElement>("[data-dropdown]");
+        if (dropdown) openDropdown(dropdown, event.key === "ArrowDown" ? 1 : -1);
+        return;
+      }
+
+      const option = event.target.closest<HTMLElement>("[data-dropdown-option]");
+      if (!option) return;
+      const menu = option.closest<HTMLElement>("[data-dropdown-menu]");
+      const dropdown = option.closest<HTMLElement>("[data-dropdown]");
+      if (!menu || !dropdown) return;
+      const options = Array.from(menu.querySelectorAll<HTMLElement>("[data-dropdown-option]"));
+      const currentIndex = options.indexOf(option);
+      let nextIndex: number | undefined;
+      if (event.key === "ArrowDown") nextIndex = (currentIndex + 1) % options.length;
+      else if (event.key === "ArrowUp") nextIndex = (currentIndex - 1 + options.length) % options.length;
+      else if (event.key === "Home") nextIndex = 0;
+      else if (event.key === "End") nextIndex = options.length - 1;
+      else if (event.key === "Escape") {
+        event.preventDefault();
+        closeDropdown(dropdown, true);
+        return;
+      } else if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        option.click();
+        return;
+      } else if (event.key.length === 1 && /[\p{L}\p{N}]/u.test(event.key)) {
+        typeaheadBuffer += normalize(event.key);
+        window.clearTimeout(typeaheadTimer);
+        typeaheadTimer = window.setTimeout(() => { typeaheadBuffer = ""; }, 700);
+        const match = options.find((candidate) => normalize(candidate.dataset.optionLabel ?? "").startsWith(typeaheadBuffer));
+        if (match) nextIndex = options.indexOf(match);
+      }
+      if (nextIndex !== undefined) {
+        event.preventDefault();
+        options[nextIndex]?.focus();
+      }
+    });
+
+    root.addEventListener("focusin", (event) => {
+      const focusedDropdown = event.target instanceof Element
+        ? event.target.closest<HTMLElement>("[data-dropdown]")
+        : null;
+      for (const dropdown of getDropdowns(root)) {
+        if (dropdown !== focusedDropdown) closeDropdown(dropdown);
+      }
+    });
+
+    const repositionOpenMenus = () => {
+      for (const dropdown of getDropdowns(root)) {
+        const menu = dropdown.querySelector<HTMLElement>("[data-dropdown-menu]");
+        const trigger = dropdown.querySelector<HTMLButtonElement>("[data-dropdown-trigger]");
+        if (menu && trigger && !menu.hidden) positionMenu(trigger, menu);
+      }
+    };
+    window.addEventListener("resize", repositionOpenMenus);
+    window.addEventListener("scroll", repositionOpenMenus, true);
+  }
+
+  function initializeAll(): void {
+    for (const root of Array.from(document.querySelectorAll<HTMLElement>("[data-gear-sort-filter-bar]"))) initialize(root);
+  }
+
+  if (!window.__netherGearDropdownsInitialized) {
+    window.__netherGearDropdownsInitialized = true;
+    document.addEventListener("astro:page-load", initializeAll);
+    document.addEventListener("pointerdown", (event) => {
+      for (const root of Array.from(document.querySelectorAll<HTMLElement>("[data-gear-sort-filter-bar]"))) {
+        if (event.target instanceof Node && !root.contains(event.target)) closeAllDropdowns(root);
+      }
+    });
+    window.addEventListener("popstate", () => {
+      for (const root of Array.from(document.querySelectorAll<HTMLElement>("[data-gear-sort-filter-bar]"))) {
+        if (root.dataset.initialized !== "true") continue;
+        const list = document.getElementById(root.dataset.listId ?? "");
+        if (!list) continue;
+        readUrl(root);
+        applyState(root, getRecords(list));
+      }
+    });
+  }
+
+  initializeAll();
+</script>

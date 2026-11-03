@@ -1,0 +1,62 @@
+---
+title: "Fast Tooling, Faster Mornings"
+description: "Choose development tooling by measuring feedback time, build needs, configuration cost, and the bottleneck that matters."
+pubDate: 2026-10-28
+category: web-development
+tags:
+  - Vite
+  - build tools
+  - developer workflow
+---
+
+I spent too long fighting slow build tools and endless waiting. Switching to modern tooling (Vite and friends) completely changed my daily motivation. This is the story of that switch and the concrete speed gains that actually matter when you’re learning and iterating constantly.
+
+## Measure the part that feels slow
+
+“The build is slow” can describe several different waits: starting the development server, loading a page after a code edit, running tests, or creating production assets. Those steps have different causes. Time them separately before replacing tools, or a new bundler may optimize a step that was not your real bottleneck.
+
+For a simple manual check, record when a command starts and when its ready message appears. For repeated checks, use a consistent script and the same machine conditions. Compare the same task before and after a change. Treat one run as an observation, not a universal benchmark; caches, dependency installation, and machine load can all affect timing.
+
+## Understand the development loop
+
+Vite provides a development server and a production build command. During development, it serves modules on demand and uses browser module support where appropriate, while production output is built for deployment. The exact behavior depends on the project’s plugins and configuration.
+
+A short package script makes the intended commands visible:
+
+```json
+{
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  }
+}
+```
+
+Framework integrations may provide their own commands that wrap Vite. Use the project’s documented entry points rather than adding a second direct command that bypasses its configuration.
+
+## Keep configuration proportional
+
+Start with the minimum setup the application needs. Add a plugin when a concrete requirement calls for it, such as a framework integration or an asset type the build must process. Each plugin adds another part to understand and maintain. Avoid copying a large configuration from a tutorial when the project only needs a small subset.
+
+Keep the development and production environments aligned. If a feature works only because of a development plugin or proxy, verify that the production build and deployment provide the same behavior. Build commands should be repeatable, and errors should make it clear which stage failed.
+
+## Improve the feedback that matters
+
+Fast feedback helps when a change can be checked immediately. Use focused tests for the module you are editing and reserve the full suite for broader validation. Keep dependencies current enough to receive fixes, but do not add tooling just to make the package list look modern.
+
+If the wait comes from type checking, large test setup, or a slow external service, changing bundlers may not solve it. Profile or time that step independently. The useful improvement is the one that shortens the loop developers use most, without making builds less reliable or harder to reproduce.
+
+## Recheck after changes
+
+After changing tools, verify a clean install, the development server, tests, and a production build. Check source maps, asset paths, environment variables, and deployment output where those apply. Keep notes on the command and conditions used for timing so future comparisons are meaningful.
+
+The goal is not to chase the shortest possible startup number. It is to reduce avoidable waiting while preserving a workflow that teammates can understand. Minimal configuration and clear scripts often matter as much as the tool itself.
+
+One useful comparison is to run the same edit-and-refresh task on a representative page, then run the test command and production build separately. Note whether the delay happens before the server is ready, after saving a file, or only during the final build. That observation points toward the relevant configuration or code path. Avoid comparing a warm cache in one setup with a clean install in another; record those conditions so the result answers a real question rather than creating a misleading headline.
+
+## Key takeaways
+
+- Fast feedback loops protect time and attention.
+- Keep configuration minimal and add tools for specific needs.
+- Measure the actual bottleneck before changing the toolchain.

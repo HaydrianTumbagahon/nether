@@ -1,0 +1,71 @@
+---
+title: "Offline Is a Feature: My First PWA"
+description: "A beginner-friendly guide to the manifest, service worker, secure context, and careful offline caching in a PWA."
+pubDate: 2026-10-24
+category: web-development
+tags:
+  - PWA
+  - service workers
+  - web development
+---
+
+There’s something magical about building a website that can be installed on someone’s phone and still work offline. The first time I got the “Add to Home Screen” prompt working on a project I built myself, I felt like a real developer. This post is both a technical guide and a pep talk for juniors: you don’t need to be senior to ship a solid PWA. I’ll break down the core pieces in plain language and share the simplest path I found.
+
+## What makes a web app installable
+
+A Progressive Web App is still a website. It can add capabilities such as installation, an application icon, and selected offline behavior through standard browser features. The exact installation experience varies by browser and operating system; a site cannot force a prompt to appear at a particular moment.
+
+Start with a web app manifest. It describes the app’s name, start URL, display preference, and icons. Reference it from the document head:
+
+```html
+<link rel="manifest" href="/manifest.webmanifest" />
+```
+
+The manifest should use valid JSON and icon files that actually exist. Choose a start URL inside the site’s intended scope. Installation requirements differ between browsers, so verify them against current platform documentation rather than assuming one checklist applies everywhere.
+
+## Add a service worker with a narrow job
+
+A service worker is a script the browser can run separately from a page. It can intercept requests and use the Cache API, which makes selected resources available offline. It generally requires a secure context: HTTPS in production, with localhost treated specially for development.
+
+Register it from a client-side script:
+
+```js
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js");
+}
+```
+
+The worker must be served from a path that gives it the intended scope. Begin by caching a small set of stable files, such as the app shell and a deliberate offline page:
+
+```js
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open("site-v1").then((cache) =>
+      cache.addAll(["/", "/offline.html"]),
+    ),
+  );
+});
+```
+
+Those paths must exist. If one request fails during installation, the cache operation can reject, so test the install with the network panel and browser application tools.
+
+## Choose what belongs offline
+
+Caching is a product decision, not a blanket switch. Static assets and public reading pages may be good candidates. Personalized, frequently changing, or sensitive responses need different handling and may not belong in a shared cache. Never cache private data without understanding its lifetime, user boundaries, and deletion behavior.
+
+Use a versioned cache name so an update can replace old assets deliberately. A fetch handler can look in the cache and fall back to the network, but the right strategy depends on the resource. A static logo can often use cache-first behavior; changing content may need network-first behavior with a clear offline fallback.
+
+Test upgrades as well as first installation. Existing workers can remain active until tabs close, and caches can outlive a deployment. Provide a cleanup path for old cache versions and avoid deleting data owned by unrelated parts of the site.
+
+## Test real failure modes
+
+Use browser developer tools to go offline and open a page that should be available. Check the console for service-worker registration errors, verify that assets are served from the expected cache, and test a fresh install and an update. Also test a missing page and a failed network request so users get a useful response instead of a blank screen.
+
+Keep the first version narrow. A manifest and one intentional offline experience are easier to reason about than caching every request. Expand only when the site has a clear offline use case and a plan for freshness, updates, and user data.
+
+## Key takeaways
+
+- Service workers have a clear job: mediate requests and manage selected cached resources.
+- Offline capability can help users, but only when the cached content is chosen deliberately.
+- Test installation, offline navigation, updates, and failure cases across target browsers.
+- Start with a small cache strategy and expand as requirements become clear.

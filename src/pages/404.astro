@@ -1,0 +1,29 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+---
+
+<SiteLayout
+  title="Page Not Found | Nether"
+  description="The address was not found. Return to the Nether desk or browse the archive."
+>
+  <main class="archive-page not-found-page">
+    <header class="archive-header">
+      <h1>This page isn’t on the desk.</h1>
+      <p>
+        I couldn’t find a page at this address. It may have moved, the link may
+        be incomplete, or the page may no longer be available.
+      </p>
+      <p>
+        Start again from the desk, browse the post archive, or search for a
+        topic. Gear guides are collected separately if you came looking for a
+        peripheral.
+      </p>
+    </header>
+    <nav class="plain-page-links" aria-label="Where to go next">
+      <a href="/">Home</a>
+      <a href="/blog/">All posts</a>
+      <a href="/gear/">Gear</a>
+      <a href="/search/">Search</a>
+    </nav>
+  </main>
+</SiteLayout>

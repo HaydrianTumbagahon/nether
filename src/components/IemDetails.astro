@@ -1,0 +1,15 @@
+---
+import GearDetails from "./GearDetails.astro";
+import type { Iem } from "../data/gear/types";
+
+interface Props {
+  iem: Iem;
+  headingLevel?: 1 | 2;
+  idPrefix?: string;
+  showHeader?: boolean;
+}
+
+const { iem, headingLevel = 1, showHeader = true } = Astro.props;
+---
+
+<GearDetails headingLevel={headingLevel} item={iem} showHeader={showHeader} />

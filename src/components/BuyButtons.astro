@@ -1,0 +1,36 @@
+---
+import type { StoreLinks } from "../data/gear/types";
+
+interface Props {
+  links?: StoreLinks;
+}
+
+const { links } = Astro.props;
+const stores = [
+  { key: "shopee", label: "Shopee" },
+  { key: "lazada", label: "Lazada" },
+  { key: "amazon", label: "Amazon" },
+] as const;
+const buttons = stores.flatMap(({ key, label }) => {
+  const href = links?.[key];
+  return href ? [{ label, href }] : [];
+});
+---
+
+{buttons.length > 0 && (
+  <section aria-label="Product buying options" class="buy-options">
+    <h3 class="buy-options-heading">Get yours here</h3>
+    <nav aria-label="Where to buy" class="buy-buttons">
+      {buttons.map(({ label, href }) => (
+        <a
+          class="buy-button"
+          href={href}
+          rel="noopener noreferrer sponsored"
+          target="_blank"
+        >
+          Buy at {label}
+        </a>
+      ))}
+    </nav>
+  </section>
+)}

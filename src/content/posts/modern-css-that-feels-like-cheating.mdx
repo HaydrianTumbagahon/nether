@@ -1,0 +1,98 @@
+---
+title: "Modern CSS That Feels Like Cheating"
+description: "Use container queries, relational selectors, native nesting, and cascade layers while keeping progressive enhancement in view."
+pubDate: 2026-10-27
+category: web-development
+tags:
+  - CSS
+  - browser features
+  - progressive enhancement
+---
+
+Container queries, :has(), native nesting, cascade layers… these features removed so many JavaScript workarounds I used to write. I’ll show real examples from my own learning projects and explain why these made me fall back in love with CSS after a period of frustration.
+
+## Let components respond to their container
+
+Traditional media queries respond to the viewport. That works for page layouts, but a reusable card may appear in a narrow sidebar on one page and a wide content area on another. A container query lets the component respond to the space its parent provides.
+
+```css
+.card-list {
+  container-type: inline-size;
+}
+
+.card {
+  display: block;
+}
+
+@container (min-width: 34rem) {
+  .card {
+    display: grid;
+    grid-template-columns: 10rem minmax(0, 1fr);
+    gap: 1rem;
+  }
+}
+```
+
+The element being queried must establish a containment context. Keep the query tied to the component’s available width rather than assuming it knows where it appears. This can remove JavaScript resize listeners whose only job was switching a layout class.
+
+## Use `:has()` to describe relationships
+
+The relational pseudo-class `:has()` selects an element based on its descendants or related elements. It can express states such as a form row that contains an invalid input or a card that contains a selected control.
+
+```css
+.field:has(input:invalid) {
+  border-color: var(--color-error);
+}
+```
+
+This is useful when the styling relationship belongs in CSS. It does not replace validation: the form still needs understandable error text, appropriate native constraints, and server-side checks for submitted data. Avoid selector patterns that are difficult to reason about or that trigger broad styling from distant descendants.
+
+## Nest related rules carefully
+
+Native CSS nesting allows a child selector to stay near the rule it extends. The `&` refers to the current selector:
+
+```css
+.article-card {
+  padding: 1rem;
+
+  & h2 {
+    margin-block: 0 0.5rem;
+  }
+
+  &:hover {
+    border-color: currentColor;
+  }
+}
+```
+
+Nesting can improve locality, but it can also hide long selector chains. Keep nesting shallow and make sure the resulting specificity remains predictable. For a state used in many places, a separate top-level rule may be easier to find.
+
+## Control precedence with cascade layers
+
+When stylesheets come from several sources, cascade layers make precedence explicit. Declare layer order once, then put rules into the appropriate layer:
+
+```css
+@layer reset, base, components, utilities;
+
+@layer components {
+  .notice {
+    border: 1px solid currentColor;
+  }
+}
+```
+
+Layer order is part of the cascade, not a way to make every conflict disappear. Unlayered styles and important declarations have special precedence rules, so document how new styles should be added. Layers are most helpful when the project adopts them consistently.
+
+## Enhance without making the fallback fragile
+
+Check current browser support for the audiences and browsers a project serves. Use feature queries when a fallback is needed, and keep the base layout useful without the enhancement. Container queries can supplement a reasonable base card; a selector enhancement should not be the only way to reveal essential content.
+
+Modern CSS can replace code that only mirrors layout state, but JavaScript remains appropriate for behavior, data, and interactions. Before adding a script, ask whether the browser can express the relationship directly. Before using a new CSS feature, test it in target browsers and keep a fallback where it matters.
+
+When a feature is not available in a required browser, keep the base experience understandable. A card can remain a single-column block before a container query enhances it; the enhancement changes presentation, not whether the content exists. A relational selector can add a visual cue while the form still provides text that explains the error. This separation makes support gaps easier to handle and keeps the CSS tied to user-visible outcomes.
+
+## Key takeaways
+
+- CSS can handle more layout and state relationships than many juniors expect.
+- Progressive enhancement remains a sound way to adopt new features.
+- Check browser support for your audience instead of assuming a feature is unavailable.

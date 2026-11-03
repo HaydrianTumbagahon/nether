@@ -1,0 +1,35 @@
+---
+import { getCollection } from "astro:content";
+import GearTypeArchive from "../../components/GearTypeArchive.astro";
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import { site } from "../../config/site";
+
+export async function getStaticPaths() {
+  const entries = await getCollection("posts");
+  const posts = entries.filter(
+    (post) => !post.data.draft || post.id.toLowerCase().includes("test"),
+  );
+
+  return site.gearTypes.map((gearType) => ({
+    params: { type: gearType.slug },
+    props: {
+      gearType,
+      posts: posts
+        .filter((post) => post.data.gearType === gearType.gearType)
+        .sort(
+          (first, second) =>
+            second.data.pubDate.getTime() - first.data.pubDate.getTime(),
+        ),
+    },
+  }));
+}
+
+const { gearType, posts } = Astro.props;
+---
+
+<SiteLayout
+  title={`${gearType.label} Gear | ${site.name}`}
+  description={gearType.description}
+>
+  <GearTypeArchive gearType={gearType} posts={posts} />
+</SiteLayout>

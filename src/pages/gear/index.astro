@@ -1,0 +1,80 @@
+---
+import { getSitePosts, getPostSlug } from "../../lib/posts";
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import { site } from "../../config/site";
+
+const posts = await getSitePosts();
+const cleanTitle = (title: string) => title.replace(/^TEST:\s*/i, "");
+const sections = site.gearTypes.map((gearType) => {
+  const typePosts = posts.filter(
+    (post) => post.data.gearType === gearType.gearType,
+  );
+  return { ...gearType, count: typePosts.length, latest: typePosts[0] };
+});
+---
+
+<SiteLayout
+  title="PC Gear | Nether"
+  description="Notes on keyboards, mice, headphones, and other gear I use at my desk."
+>
+  <main class="gear-hub">
+    <header class="gear-hub-header">
+      <div>
+        <a class="post-return" href="/">
+          ← The Desk
+        </a>
+        <h1>Gear</h1>
+        <p>
+          This section organizes articles about PC peripherals and other desk
+          equipment, from keyboards and pointing devices to headphones, in-ear
+          monitors, and accessories.
+        </p>
+        <p>
+          Browse by equipment type, then use guides and comparisons to understand
+          terminology, features, and trade-offs. The goal is to make product
+          information easier to evaluate against your own needs, not to suggest
+          that one setup suits everyone.
+        </p>
+      </div>
+      <a class="gear-rating-link" href="/gear/how-i-rate/">
+        <span>How I rate gear</span>
+        <span aria-hidden="true">→</span>
+      </a>
+    </header>
+
+    <div class="gear-hub-sections">
+      {sections.map((section, index) => (
+        <section
+          class:list={[
+            "gear-hub-section",
+            index % 2 === 1 && "gear-hub-section-reverse",
+          ]}
+        >
+          <div>
+            <p class="gear-section-count">
+              {section.count} {section.count === 1 ? "post" : "posts"}
+            </p>
+            <h2>
+              <a href={`/gear/${section.slug}/`}>{section.label}</a>
+            </h2>
+            <p>{section.description}</p>
+          </div>
+          <div class="gear-section-latest">
+            {section.latest ? (
+              <a href={`/blog/${getPostSlug(section.latest)}/`}>
+                <span>Latest</span>
+                <strong>
+                  {section.latest.data.review?.productName ??
+                    cleanTitle(section.latest.data.title)}
+                </strong>
+                <span aria-hidden="true">→</span>
+              </a>
+            ) : (
+              <span class="empty-lane">I haven’t filed a post here yet.</span>
+            )}
+          </div>
+        </section>
+      ))}
+    </div>
+  </main>
+</SiteLayout>

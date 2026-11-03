@@ -1,0 +1,43 @@
+---
+import { site } from "../config/site";
+const currentYear = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <div class="site-footer-identity">
+      <a class="site-footer-name" href="/">{site.name}</a>
+      <p>
+        Practical web development, thoughtful AI tool insights, and candid
+        reviews of keyboards, mice, and IEMs.
+      </p>
+    </div>
+    <nav aria-labelledby="footer-explore-heading" class="site-footer-group">
+      <h2 id="footer-explore-heading">Explore</h2>
+      <a href="/#web-development">Web Development</a>
+      <a href="/blog/">All articles</a>
+    </nav>
+    <nav aria-labelledby="footer-gear-heading" class="site-footer-group">
+      <h2 id="footer-gear-heading">Gear</h2>
+      <a href="/#gears">Gears</a>
+      <a href="/keyboards/">Keyboards</a>
+      <a href="/mice/">Mice</a>
+      <a href="/iems/">IEMs</a>
+      <a href="/uses/">Uses</a>
+    </nav>
+    <nav aria-labelledby="footer-about-heading" class="site-footer-group">
+      <h2 id="footer-about-heading">About</h2>
+      <a href="/about/">About</a>
+      <a href="/contact/">Contact</a>
+    </nav>
+    <nav aria-labelledby="footer-legal-heading" class="site-footer-group">
+      <h2 id="footer-legal-heading">Legal</h2>
+      <a href="/disclosure/">Disclosure</a>
+      <a href="/privacy/">Privacy</a>
+      <a href="/terms/">Terms</a>
+    </nav>
+    <div class="site-footer-credits">
+      <p>© {currentYear} {site.name}. All rights reserved.</p>
+    </div>
+  </div>
+</footer>

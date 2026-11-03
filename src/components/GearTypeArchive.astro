@@ -1,0 +1,56 @@
+---
+import type { CollectionEntry } from "astro:content";
+import GearListing from "./GearListing.astro";
+
+interface GearType {
+  slug: string;
+  label: string;
+  gearType: string;
+  description: string;
+  introduction: string;
+}
+
+interface Props {
+  gearType: GearType;
+  posts: CollectionEntry<"posts">[];
+  format?: "review" | "guide" | "comparison";
+}
+
+const { gearType, posts, format } = Astro.props;
+const formats = [
+  { slug: "review", label: "Reviews" },
+  { slug: "guide", label: "Guides" },
+  { slug: "comparison", label: "Comparisons" },
+];
+const visiblePosts = format
+  ? posts.filter((post) => post.data.format === format)
+  : posts;
+---
+
+<main class="archive-page gear-type-page">
+  <header class="archive-header">
+    <a class="post-return" href="/gear/">
+      ← Gear
+    </a>
+    <h1>{gearType.label}</h1>
+    <p>{gearType.description}</p>
+    <p>{gearType.introduction}</p>
+  </header>
+  <nav aria-label="Filter by format" class="gear-format-filter">
+    <a
+      aria-current={!format ? "page" : undefined}
+      href={`/gear/${gearType.slug}/`}
+    >
+      All formats
+    </a>
+    {formats.map((item) => (
+      <a
+        aria-current={format === item.slug ? "page" : undefined}
+        href={`/gear/${gearType.slug}/${item.slug}/`}
+      >
+        {item.label}
+      </a>
+    ))}
+  </nav>
+  <GearListing posts={visiblePosts} />
+</main>

@@ -1,0 +1,60 @@
+---
+interface ComparisonItem {
+  name: string;
+  specs: Record<string, string>;
+}
+
+interface Props {
+  items: ComparisonItem[];
+  caption?: string;
+}
+
+const { items, caption = "Comparison" } = Astro.props;
+if (items.length < 2 || items.length > 4) {
+  throw new Error("ComparisonTable needs between two and four products.");
+}
+const specNames = [
+  ...new Set(items.flatMap((item) => Object.keys(item.specs))),
+];
+---
+
+<div class="comparison-view">
+  <div class="table-scroll comparison-table-desktop">
+    <table class="comparison-table">
+      <caption>{caption}</caption>
+      <thead>
+        <tr>
+          <th scope="col">Specification</th>
+          {items.map((item) => (
+            <th scope="col">{item.name}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {specNames.map((name) => (
+          <tr>
+            <th scope="row">{name}</th>
+            {items.map((item) => (
+              <td>{item.specs[name] ?? "Not listed"}</td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <div class="comparison-cards-mobile">
+    {items.map((item) => (
+      <article class="comparison-product-card">
+        <h3>{item.name}</h3>
+        <dl>
+          {specNames.map((name) => (
+            <div>
+              <dt>{name}</dt>
+              <dd>{item.specs[name] ?? "Not listed"}</dd>
+            </div>
+          ))}
+        </dl>
+      </article>
+    ))}
+  </div>
+</div>

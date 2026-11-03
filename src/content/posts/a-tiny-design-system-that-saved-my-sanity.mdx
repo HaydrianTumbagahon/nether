@@ -1,0 +1,76 @@
+---
+title: "A Tiny Design System That Saved My Sanity"
+description: "Start a small design system with semantic color and spacing tokens, a few reusable patterns, and brief documentation."
+pubDate: 2026-10-16
+category: web-development
+tags:
+  - design systems
+  - CSS
+  - UI components
+---
+
+I used to copy-paste the same button styles across projects and then hate myself when I needed to change the border radius. Creating even a very small design system (just colors, spacing, and a few components) completely changed how fast I could build. This post shows the minimal version I wish someone had shown me right after graduation.
+
+## Start with tokens
+
+A design token is a named value for a decision you expect to reuse. Useful first tokens include page and surface colors, text colors, spacing steps, type sizes, and border radii. Names should describe a role rather than one particular component, so several parts of the site can share the same choice.
+
+```css
+:root {
+  --color-page: #ffffff;
+  --color-surface: #f3f3f3;
+  --color-text: #242424;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 1rem;
+  --radius-control: 0.25rem;
+}
+```
+
+Tokens make revisions easier: changing one value updates every component that uses it. They do not make a palette accessible by themselves. Check text contrast and verify that the chosen spacing works in actual layouts.
+
+## Add only useful components
+
+After the tokens, identify patterns that repeat and have a shared purpose. A button, text input, or page heading is often a reasonable start. Give each component a clear base state and document meaningful variations such as primary, secondary, disabled, or invalid.
+
+Do not componentize every element just to create a library. A component is useful when it reduces duplication, gives a pattern one consistent name, or keeps behavior together. A one-off layout may be clearer as ordinary markup and CSS.
+
+For example, a small CSS class can collect shared button decisions:
+
+```css
+.button-primary {
+  min-height: 2.75rem;
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--color-text);
+  color: var(--color-page);
+  font: inherit;
+}
+```
+
+The semantic HTML remains a button, and the class does not replace states such as `:focus-visible` or disabled behavior.
+
+## Keep the rules small and explicit
+
+Write down the intended use of each token and component. A short note can explain that `--space-3` is the standard section gap or that a primary button is reserved for the main action. Include examples of correct usage and note important accessibility requirements. Documentation can live beside the component or in a brief project page.
+
+Avoid rules that are too abstract to help. A token called `--blue-7` explains less than `--color-link`; a component with many booleans may be hiding several separate patterns. Start with names that make choices easier to find and revisit.
+
+## Evolve through real use
+
+Use the system on a small page before adding more tokens. When a repeated value appears, decide whether it belongs in the shared vocabulary. When a value is unique to one illustration or page, keep it local instead of expanding the system unnecessarily.
+
+Review changes across the pages that use a token. A spacing change that improves one button might make form controls cramped. A surface color must work with text, borders, and focus indicators. Shared rules make changes efficient, but they also make the effect broader, so inspect the affected patterns deliberately.
+
+## Keep the first version maintainable
+
+Prefer a small set of useful names over a large catalog. If a token is difficult to explain or appears only once, it may not need to be shared yet. When a component needs another option, describe the user-facing difference instead of adding a boolean for every styling detail. This keeps the system understandable to someone who did not create it.
+
+You can review the system as part of ordinary interface work. When a repeated value changes, update the token and check the components that use it. When a new pattern appears, first see whether an existing component can represent it without awkward exceptions. If not, add the smallest new rule that explains the pattern. A lightweight changelog or short note about the reason for a change is enough to help later contributors understand it.
+
+## Key takeaways
+
+- Start with tokens, not components.
+- Documentation can be brief and still prevent confusion.
+- Consistency reduces decision fatigue and makes revisions easier.

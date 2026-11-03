@@ -1,0 +1,33 @@
+---
+import { getTagSlug } from "../lib/posts";
+
+interface Props {
+  tags: { tag: string; count: number }[];
+}
+
+const { tags } = Astro.props;
+---
+
+{tags.length > 0 ? (
+  <ul class="tag-cloud" aria-label="Tags">
+    {tags.map(({ tag, count }) => (
+      <li>
+        <a
+          class:list={[
+            "tag-cloud-link",
+            count >= 4
+              ? "tag-size-large"
+              : count >= 2
+                ? "tag-size-medium"
+                : "tag-size-small",
+          ]}
+          href={`/tags/${getTagSlug(tag)}/`}
+        >
+          {tag} <span>{count}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+) : (
+  <p class="empty-lane">I haven’t tagged any posts yet.</p>
+)}

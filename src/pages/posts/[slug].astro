@@ -1,0 +1,174 @@
+---
+import { getCollection, render, type CollectionEntry } from "astro:content";
+import Aside from "../../components/Aside.astro";
+import Cover from "../../components/Cover.astro";
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import {
+  formatDate,
+  getPostSlug,
+  getRelatedPosts,
+} from "../../lib/posts";
+import { site } from "../../config/site";
+
+type Post = CollectionEntry<"posts">;
+
+interface Props {
+  post: Post;
+}
+
+const isVisiblePost = (post: Post) =>
+  !post.data.draft || post.id.toLowerCase().includes("test");
+
+export async function getStaticPaths() {
+  const posts = await getCollection("posts");
+
+  return posts
+    .filter(
+      (post) => !post.data.draft || post.id.toLowerCase().includes("test"),
+    )
+    .map((post) => ({
+      params: {
+        slug: (post.id.split("/").at(-1) ?? post.id)
+          .replace(/\.mdx?$/i, "")
+          .toLowerCase(),
+      },
+      props: { post },
+    }));
+}
+
+const { post } = Astro.props;
+const { Content, headings } = await render(post);
+const outline = headings.filter(
+  (heading) => heading.depth === 2 || heading.depth === 3,
+);
+const allPosts = (await getCollection("posts")).filter(isVisiblePost);
+const preferredRelated = await getRelatedPosts(post, 3);
+const relatedIds = new Set(preferredRelated.map((entry) => entry.id));
+const fallbackRelated = allPosts
+  .filter((entry) => entry.id !== post.id && !relatedIds.has(entry.id))
+  .map((entry) => ({
+    entry,
+    score:
+      Number(entry.data.category === post.data.category) +
+      entry.data.tags.filter((tag) => post.data.tags.includes(tag)).length,
+  }))
+  .sort(
+    (first, second) =>
+      second.score - first.score ||
+      second.entry.data.pubDate.getTime() - first.entry.data.pubDate.getTime(),
+  )
+  .map(({ entry }) => entry);
+const relatedPosts = [...preferredRelated, ...fallbackRelated].slice(0, 3);
+const categoryLabel =
+  site.categories.find((category) => category.slug === post.data.category)
+    ?.label ?? post.data.category;
+const cleanTitle = post.data.title.replace(/^TEST:\s*/i, "");
+const postHref = (entry: Post) => `/posts/${getPostSlug(entry)}/`;
+const canonicalUrl = new URL(`/blog/${getPostSlug(post)}/`, site.url).href;
+const postSchema = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  headline: cleanTitle,
+  description: post.data.description,
+  image: new URL("/social-image.svg", site.url).href,
+  datePublished: post.data.pubDate.toISOString(),
+  dateModified: (post.data.updatedDate ?? post.data.pubDate).toISOString(),
+  author: { "@type": "Person", name: post.data.author },
+  mainEntityOfPage: canonicalUrl,
+  publisher: { "@type": "Organization", name: site.name },
+}).replace(/</g, "\\u003c");
+---
+
+<SiteLayout
+  title={`${cleanTitle} | ${site.name}`}
+  description={post.data.description}
+  canonicalUrl={canonicalUrl}
+  ogType="article"
+>
+  <script type="application/ld+json" set:html={postSchema} />
+  <div
+    aria-label="Reading progress"
+    aria-valuemin="0"
+    aria-valuemax="100"
+    aria-valuenow="0"
+    class="post-reading-progress"
+    data-reading-progress
+    role="progressbar"
+  ></div>
+  <main class="post-page">
+    <header class="post-header">
+      <a class="post-return" href="/">
+        ← The Desk
+      </a>
+      <p class="post-category">{categoryLabel}</p>
+      <h1>{cleanTitle}</h1>
+      <p class="post-byline">
+        <time datetime={post.data.pubDate.toISOString()}>
+          {formatDate(post.data.pubDate)}
+        </time>
+      </p>
+      <p class="post-deck">{post.data.description}</p>
+      <div class="post-cover" data-reveal="mask">
+        <Cover post={post} loading="eager" />
+      </div>
+    </header>
+
+    <div class="post-layout">
+      {outline.length > 0 && (
+        <nav aria-label="Table of contents" class="post-toc" data-post-toc>
+          <h2>On this page</h2>
+          <ol>
+            {outline.map((heading) => (
+              <li class:list={[heading.depth === 3 && "toc-subheading"]}>
+                <a href={`#${heading.slug}`}>{heading.text}</a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+      )}
+
+      <article class="post-article">
+        <div class="article-content" data-article-content>
+          <Content components={{ Aside }} />
+        </div>
+        <ul aria-label="Post tags" class="post-tags">
+          {post.data.tags.map((tag) => (
+            <li>{tag}</li>
+          ))}
+        </ul>
+      </article>
+    </div>
+
+    <section aria-labelledby="keep-reading-title" class="keep-reading">
+      <h2 id="keep-reading-title">Keep reading</h2>
+      {relatedPosts.length > 0 ? (
+        <div class="keep-reading-grid">
+          {relatedPosts.map((entry) => (
+            <article class="keep-reading-item">
+              <p>
+                {
+                  site.categories.find(
+                    (category) => category.slug === entry.data.category,
+                  )?.label
+                }
+              </p>
+              <h3>
+                <a href={postHref(entry)}>
+                  {entry.data.title.replace(/^TEST:\s*/i, "")}
+                </a>
+              </h3>
+              <span>{formatDate(entry.data.pubDate)}</span>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <p class="empty-lane">
+          I’ll add related posts here as the archive grows.
+        </p>
+      )}
+    </section>
+  </main>
+  <script>
+    import "../../scripts/article";
+  </script>
+</SiteLayout>

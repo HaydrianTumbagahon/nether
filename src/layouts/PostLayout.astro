@@ -1,0 +1,233 @@
+---
+import type { CollectionEntry } from "astro:content";
+import ProsCons from "../components/ProsCons.astro";
+import SpecTable from "../components/SpecTable.astro";
+import Cover from "../components/Cover.astro";
+import SiteLayout from "./SiteLayout.astro";
+import { formatDate, getPostSlug, getTagSlug } from "../lib/posts";
+import { site } from "../config/site";
+
+type Post = CollectionEntry<"posts">;
+
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  post: Post;
+  headings: Heading[];
+  previous?: Post;
+  next?: Post;
+  relatedPosts: Post[];
+}
+
+const { post, headings, previous, next, relatedPosts } = Astro.props;
+const outline = headings.filter(
+  (heading) => heading.depth === 2 || heading.depth === 3,
+);
+const review = post.data.review;
+const categoryLabel =
+  site.categories.find((category) => category.slug === post.data.category)
+    ?.label ?? post.data.category;
+const title = post.data.title.replace(/^TEST:\s*/i, "");
+const canonicalUrl = new URL(`/blog/${getPostSlug(post)}/`, site.url).href;
+const emailHref = `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(canonicalUrl)}`;
+const postSchema = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  headline: title,
+  description: post.data.description,
+  image: new URL("/social-image.svg", site.url).href,
+  datePublished: post.data.pubDate.toISOString(),
+  dateModified: (post.data.updatedDate ?? post.data.pubDate).toISOString(),
+  author: { "@type": "Person", name: post.data.author },
+  mainEntityOfPage: canonicalUrl,
+  publisher: { "@type": "Organization", name: site.name },
+}).replace(/</g, "\\u003c");
+---
+
+<SiteLayout
+  title={`${title} | ${site.name}`}
+  description={post.data.description}
+  canonicalUrl={canonicalUrl}
+  ogType="article"
+>
+  <script type="application/ld+json" set:html={postSchema} />
+  <div
+    aria-label="Reading progress"
+    aria-valuemin="0"
+    aria-valuemax="100"
+    aria-valuenow="0"
+    class="post-reading-progress"
+    data-reading-progress
+    role="progressbar"
+  ></div>
+  <main
+    class="post-page"
+    data-pagefind-body={!post.data.draft ? "" : undefined}
+    data-pagefind-ignore={post.data.draft ? "" : undefined}
+  >
+    {!post.data.draft && (
+      <>
+        <meta data-pagefind-meta="post:true" />
+        <meta data-pagefind-meta={`category:${categoryLabel}`} />
+        <meta data-pagefind-meta={`tags:${post.data.tags.join(", ")}`} />
+        <span class="sr-only" data-pagefind-filter="type">post</span>
+      </>
+    )}
+    <header class="post-header">
+      <a class="post-return" href="/blog/">
+        ← All posts
+      </a>
+      <p class="post-category">{categoryLabel}</p>
+      <h1 data-pagefind-meta="title" data-pagefind-weight="12">
+        {title}
+      </h1>
+      <p class="post-byline">
+        <time datetime={post.data.pubDate.toISOString()}>
+          {formatDate(post.data.pubDate)}
+        </time>
+        {post.data.updatedDate && (
+          <span class="updated-date">
+            Updated{" "}
+            <time datetime={post.data.updatedDate.toISOString()}>
+              {formatDate(post.data.updatedDate)}
+            </time>
+          </span>
+        )}
+      </p>
+      <p
+        class="post-deck"
+        data-pagefind-meta="description"
+        data-pagefind-weight="3"
+      >
+        {post.data.description}
+      </p>
+      <div class="post-cover" data-reveal="mask">
+        <Cover post={post} loading="eager" />
+      </div>
+    </header>
+
+    {review && (
+      <section aria-labelledby="verdict-title" class="quick-verdict">
+        <div class="verdict-heading">
+          <div>
+            <h2 id="verdict-title">Quick verdict</h2>
+            <p>
+              {review.productName} · {review.brand}
+            </p>
+          </div>
+          <div class="verdict-rating">
+            <span class="rating-marks" aria-hidden="true">
+              {Array.from({ length: 10 }, (_, index) => (
+                <span
+                  class:list={[
+                    "rating-mark",
+                    index < review.rating * 2 && "is-filled",
+                  ]}
+                ></span>
+              ))}
+            </span>
+            <span>{review.rating.toFixed(1)} / 5</span>
+          </div>
+        </div>
+        <p class="verdict-price">Price range: {review.priceRange}</p>
+        <ProsCons pros={review.pros} cons={review.cons} />
+        <SpecTable specs={review.specs} />
+        <p class="verdict-copy">{review.verdict}</p>
+      </section>
+    )}
+
+    <div class:list={["post-layout", outline.length > 0 && "has-toc"]}>
+      {outline.length > 0 && (
+        <nav aria-label="Table of contents" class="post-toc" data-post-toc>
+          <h2>On this page</h2>
+          <ol>
+            {outline.map((heading) => (
+              <li class:list={[heading.depth === 3 && "toc-subheading"]}>
+                <a href={`#${heading.slug}`}>{heading.text}</a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+      )}
+
+      <article class="post-article">
+        <div class="article-content" data-article-content>
+          <slot />
+        </div>
+        <ul aria-label="Post tags" class="post-tags" data-pagefind-weight="8">
+          {post.data.tags.map((tag) => (
+            <li>
+              <a href={`/tags/${getTagSlug(tag)}/`}>{tag}</a>
+            </li>
+          ))}
+        </ul>
+        <nav aria-label="Share this post" class="post-share">
+          <a data-copy-link href={canonicalUrl}>
+            Copy link
+          </a>
+          <a href={emailHref}>Email</a>
+        </nav>
+      </article>
+    </div>
+
+    <nav
+      aria-label="Adjacent posts"
+      class="post-navigation"
+      data-pagefind-ignore
+    >
+      {previous ? (
+        <a href={`/blog/${getPostSlug(previous)}/`}>
+          <span>Older</span>
+          <strong>{previous.data.title.replace(/^TEST:\s*/i, "")}</strong>
+        </a>
+      ) : (
+        <span />
+      )}
+      {next ? (
+        <a href={`/blog/${getPostSlug(next)}/`}>
+          <span>Newer</span>
+          <strong>{next.data.title.replace(/^TEST:\s*/i, "")}</strong>
+        </a>
+      ) : (
+        <span />
+      )}
+    </nav>
+
+    <section
+      aria-labelledby="keep-reading-title"
+      class="keep-reading"
+      data-pagefind-ignore
+    >
+      <h2 id="keep-reading-title">Keep reading</h2>
+      {relatedPosts.length > 0 ? (
+        <div class="keep-reading-grid">
+          {relatedPosts.map((entry) => (
+            <article class="keep-reading-item">
+              <p>
+                {
+                  site.categories.find(
+                    (category) => category.slug === entry.data.category,
+                  )?.label
+                }
+              </p>
+              <h3>
+                <a href={`/blog/${getPostSlug(entry)}/`}>
+                  {entry.data.title.replace(/^TEST:\s*/i, "")}
+                </a>
+              </h3>
+              <span>{formatDate(entry.data.pubDate)}</span>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <p class="empty-lane">
+          I’ll add related posts here as the archive grows.
+        </p>
+      )}
+    </section>
+  </main>
+</SiteLayout>

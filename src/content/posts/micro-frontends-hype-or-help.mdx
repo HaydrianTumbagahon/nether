@@ -1,0 +1,58 @@
+---
+title: "Micro-Frontends: Hype or Help?"
+description: "Understand when independently owned frontend modules help teams and why clear boundaries should come first."
+pubDate: 2026-10-29
+category: web-development
+tags:
+  - architecture
+  - frontend
+  - modularity
+---
+
+As a junior I kept hearing about micro-frontends and assumed they were only for huge companies. After researching and experimenting, I realized there are smaller, practical versions of the idea that can help even mid-sized projects. This post separates the hype from the useful patterns.
+
+## What a micro-frontend is
+
+A micro-frontend divides a frontend into parts that can be owned and changed with some independence. The boundaries may follow product areas, such as a catalog and an account section. The term is used for different architectures: teams might compose pages at build time, load independently deployed applications at runtime, or share modules inside a larger repository.
+
+The defining idea is not a particular framework or tool. It is the combination of explicit boundaries and team ownership. If every part still requires coordinated changes and deployments, splitting the code into separate packages may add structure without delivering much independence.
+
+## Start with module boundaries
+
+Before introducing separate applications, make responsibilities clear inside the existing codebase. Keep a feature’s routes, components, styles, and tests together. Define what it owns and what it imports from other areas. A small shared contract can make data expectations explicit:
+
+```ts
+export interface ProductSummary {
+  id: string;
+  name: string;
+  href: string;
+}
+```
+
+This kind of boundary can improve parallel work without creating separate deployments. It also reveals coupling: if a feature must import internal details from many neighbors, the architecture may need cleanup before it is split further.
+
+## Count the operational costs
+
+Independent deployment can support team autonomy, but it introduces coordination work. The shell and each application need compatible routing and navigation. Teams must agree on loading and error behavior, accessibility expectations, visual tokens, and how shared dependencies are handled. Monitoring and rollback also need to work across independently changing parts.
+
+Runtime composition can affect performance and reliability. A page may need to load multiple bundles, and a failed remote application needs a sensible fallback. Shared dependencies can reduce duplication but require version coordination. These are engineering costs, not reasons to reject the approach automatically; they need to be weighed against the coordination problem it is intended to solve.
+
+## Consider smaller versions first
+
+A modular monolith can provide clear ownership while keeping one deployment. A workspace or package boundary can make dependencies explicit. Separately built sections can be composed before deployment. These approaches retain a single delivery path while reducing accidental coupling.
+
+Choose the smallest boundary that gives teams useful autonomy. Avoid splitting a small feature merely because the architecture diagram looks more advanced. More repositories, pipelines, runtime requests, and shared contracts all need maintenance. If the team has no need to deploy or scale areas independently, those costs may outweigh the benefit.
+
+## Decide from the team’s constraints
+
+Ask which teams need to change which parts independently, how often their work blocks one another, and what must remain consistent across the product. Identify the concrete pain first. Then compare a module boundary, package boundary, and independent application against the same requirements.
+
+Micro-frontends are an organizational tool as much as a technical one. They work best when ownership and contracts are clear. A disciplined folder structure may be enough today, with a larger split available if team boundaries and deployment needs later justify it.
+
+Before a split, map one user journey across the proposed boundary. Identify which part owns the URL, shared navigation, loading state, and error state. If several teams need to edit the same files or coordinate every release, the boundary is not yet providing autonomy. Tighten module ownership first, then revisit the architecture using a real deployment or coordination need as evidence.
+
+## Key takeaways
+
+- Most juniors do not need micro-frontends for a small project.
+- Team autonomy is the main benefit to evaluate.
+- Start with clear module boundaries before adding deployment complexity.

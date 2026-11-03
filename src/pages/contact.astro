@@ -1,0 +1,252 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+
+const endpointValue =
+  import.meta.env.PUBLIC_CONTACT_FORM_ENDPOINT?.trim() ?? "";
+let formEndpoint: string | undefined;
+
+try {
+  const parsedEndpoint = new URL(endpointValue);
+  if (parsedEndpoint.protocol === "https:") formEndpoint = parsedEndpoint.href;
+} catch {
+  formEndpoint = undefined;
+}
+
+const emailValue = import.meta.env.PUBLIC_CONTACT_EMAIL?.trim() ?? "";
+const contactEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)
+  ? emailValue
+  : undefined;
+const mailto = contactEmail
+  ? `mailto:${contactEmail}?subject=${encodeURIComponent("A note about Nether")}`
+  : undefined;
+---
+
+<SiteLayout
+  title="Contact | Nether"
+  description="Contact HADES with feedback, corrections, collaboration ideas, or questions about Nether's articles and gear coverage."
+>
+  <main class="archive-page contact-page">
+    <header class="archive-header">
+      <h1>Contact</h1>
+      <p>
+        Send feedback, a correction, a collaboration enquiry, or a question
+        about an article or product covered on Nether.
+      </p>
+    </header>
+
+    <section class="plain-page-section">
+      <h2>Ways to reach me</h2>
+      <p>
+        The contact form is available when an HTTPS form endpoint is configured
+        for this build. If a contact email is configured, a direct email link
+        appears below the form. I do not publish another address or contact
+        channel here.
+      </p>
+      <p>
+        I read messages when I can, but I cannot promise a particular response
+        time. Product questions are welcome; the site is an editorial project,
+        not manufacturer or store support.
+      </p>
+    </section>
+    <section class="plain-page-section">
+      <h2>Before you write</h2>
+      <p>
+        Please include the page or product you mean and enough detail for me
+        to understand the issue. For store links, ratings, and image or
+        measurement sources, the <a href="/disclosure/">Disclosure</a> page
+        may answer your question first.
+      </p>
+      <p>
+        You can also review the <a href="/privacy/">Privacy</a> and
+        <a href="/terms/">Terms</a> pages, including how contact messages are
+        handled.
+      </p>
+    </section>
+
+    {!formEndpoint && (
+      <p class="contact-fallback">
+        The contact form is unavailable at the moment.
+      </p>
+    )}
+
+    <form
+      action={formEndpoint}
+      class="contact-form"
+      data-contact-form
+      method="POST"
+    >
+      <div class="contact-honeypot" aria-hidden="true">
+        <label for="company-site">Leave this field blank</label>
+        <input
+          id="company-site"
+          name="_gotcha"
+          tabindex="-1"
+          autocomplete="off"
+        />
+      </div>
+
+      <label for="contact-name">Name</label>
+      <input
+        autocomplete="name"
+        id="contact-name"
+        name="name"
+        required
+        maxlength="100"
+        aria-describedby="contact-name-error"
+      />
+      <p
+        class="contact-field-error"
+        id="contact-name-error"
+        aria-live="polite"
+      ></p>
+
+      <label for="contact-email">Email</label>
+      <input
+        autocomplete="email"
+        id="contact-email"
+        name="email"
+        type="email"
+        required
+        maxlength="254"
+        aria-describedby="contact-email-error"
+      />
+      <p
+        class="contact-field-error"
+        id="contact-email-error"
+        aria-live="polite"
+      ></p>
+
+      <label for="contact-message">Message</label>
+      <textarea
+        id="contact-message"
+        name="message"
+        required
+        minlength="10"
+        maxlength="5000"
+        rows="7"
+        aria-describedby="contact-message-error"
+      ></textarea>
+      <p
+        class="contact-field-error"
+        id="contact-message-error"
+        aria-live="polite"
+      ></p>
+
+      <button class="contact-submit" disabled={!formEndpoint} type="submit">
+        Send message
+      </button>
+      <p class="contact-error" data-contact-error hidden role="alert">
+        I couldn’t send that just now. Please try again later.
+      </p>
+    </form>
+
+    <p class="contact-success" data-contact-success hidden role="status">
+      Thanks for the note. Your message is on its way.
+    </p>
+
+    {mailto ? (
+      <p class="contact-fallback">
+        Prefer email? <a href={mailto}>Write to me</a>.
+      </p>
+    ) : (
+      <p class="contact-fallback">
+        A direct email address is not configured for this build.
+      </p>
+    )}
+
+    <p class="legal-updated">
+      Last updated <time datetime="2026-11-02">November 2, 2026</time>.
+    </p>
+
+    <nav aria-label="Related pages" class="plain-page-links">
+      <a href="/privacy/">Privacy</a>
+      <a href="/terms/">Terms</a>
+      <a href="/disclosure/">Disclosures</a>
+    </nav>
+  </main>
+  <script>
+    const form = document.querySelector<HTMLFormElement>("[data-contact-form]");
+    const successMessage = document.querySelector<HTMLElement>(
+      "[data-contact-success]",
+    );
+    const errorMessage = document.querySelector<HTMLElement>(
+      "[data-contact-error]",
+    );
+
+    function updateFieldError(control: HTMLInputElement | HTMLTextAreaElement) {
+      const error = document.getElementById(`${control.id}-error`);
+      if (!error) return;
+      const message = control.validity.valueMissing
+        ? "This field is required."
+        : control.validity.typeMismatch
+          ? "Enter a valid email address."
+          : control.validity.tooShort
+            ? "Please add a little more detail."
+            : control.validity.tooLong
+              ? "This response is too long."
+              : "";
+      error.textContent = message;
+      control.setAttribute("aria-invalid", String(Boolean(message)));
+    }
+
+    if (form && successMessage && errorMessage) {
+      const controls = Array.from(
+        form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
+          "input, textarea",
+        ),
+      ).filter((control) => control.name !== "_gotcha");
+
+      form.addEventListener(
+        "invalid",
+        (event) => {
+          if (
+            event.target instanceof HTMLInputElement ||
+            event.target instanceof HTMLTextAreaElement
+          ) {
+            updateFieldError(event.target);
+          }
+        },
+        true,
+      );
+
+      controls.forEach((control) => {
+        control.addEventListener("input", () => updateFieldError(control));
+      });
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        controls.forEach(updateFieldError);
+        if (!form.reportValidity()) return;
+
+        const honeypot =
+          form.querySelector<HTMLInputElement>("[name='_gotcha']");
+        if (honeypot?.value.trim()) {
+          form.hidden = true;
+          successMessage.hidden = false;
+          return;
+        }
+
+        const submitButton = form.querySelector<HTMLButtonElement>(
+          "button[type='submit']",
+        );
+        if (!submitButton || !form.action.startsWith("https://")) return;
+        submitButton.disabled = true;
+        errorMessage.hidden = true;
+
+        try {
+          const response = await fetch(form.action, {
+            method: "POST",
+            body: new FormData(form),
+            headers: { Accept: "application/json" },
+          });
+          if (!response.ok) throw new Error("Contact form submission failed.");
+          form.hidden = true;
+          successMessage.hidden = false;
+        } catch {
+          errorMessage.hidden = false;
+          submitButton.disabled = false;
+        }
+      });
+    }
+  </script>
+</SiteLayout>

@@ -1,0 +1,101 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+---
+
+<SiteLayout
+  title="Privacy | Nether"
+  description="What information Nether uses, how browser storage and contact options work, and how to ask a privacy question."
+>
+  <main class="archive-page plain-page">
+    <header class="archive-header">
+      <h1>Privacy</h1>
+      <p>
+        This policy describes the information handled by the current Nether
+        website and what happens when you follow a link away from it.
+      </p>
+    </header>
+    <section class="plain-page-section">
+      <h2>Information this site uses</h2>
+      <p>
+        Nether does not ask you to create an account. This build does not
+        include an analytics service or advertising tracker. The site code does
+        not set cookies.
+      </p>
+      <p>
+        Search uses a Pagefind index included with the site and runs in your
+        browser. On the search page, a search can be included in the page URL
+        as a <code>q</code> parameter. As with other page requests, that URL may
+        be visible to the infrastructure serving the site; this project does
+        not identify the live host's logging or retention practices.
+      </p>
+    </section>
+    <section class="plain-page-section">
+      <h2>Browser storage</h2>
+      <p>
+        The theme control saves your light or dark preference in this
+        browser's local storage under <code>nether-theme</code>. The site reads
+        that value on later visits so it can restore your choice. It is not a
+        cookie and stays in the browser until you clear it or your browser
+        removes site data.
+      </p>
+      <p>
+        If you have not chosen a theme, the site uses your device's system
+        preference. No account or profile is created from this setting.
+      </p>
+    </section>
+    <section class="plain-page-section">
+      <h2>Contact messages</h2>
+      <p>
+        If a contact form is enabled for the current build, it sends the name,
+        email address, and message you enter to the HTTPS form endpoint
+        configured for the site. The project does not name that provider or
+        store form submissions in a site database. If a direct email link is
+        shown, choosing it opens your email service and its handling applies.
+      </p>
+      <p>
+        Nether does not set a retention period for messages. The configured
+        form or email service may keep information under its own terms and
+        privacy policy. Check that service's policy for details.
+      </p>
+    </section>
+    <section class="plain-page-section">
+      <h2>Links to other sites</h2>
+      <p>
+        Product pages link to Shopee, Lazada, and Amazon. Those stores operate
+        independently and may use their own cookies, analytics, or other
+        technologies after you leave Nether. Their privacy notices and terms
+        govern your activity there. Some product links may be affiliate links;
+        see the <a href="/disclosure/">Disclosure</a> page for details.
+      </p>
+    </section>
+    <section class="plain-page-section">
+      <h2>Your choices and privacy requests</h2>
+      <p>
+        You can clear the saved theme preference using your browser's site-data
+        controls. Depending on where you live and which laws apply, you may
+        also have rights to ask for access to, correction of, or deletion of
+        personal information, or to object to or limit certain uses. Those
+        rights depend on the circumstances and on the service that received
+        the information.
+      </p>
+      <p>
+        To ask a privacy question or make a request, use the contact option
+        available on the <a href="/contact/">Contact</a> page. I will handle
+        requests as required by applicable data protection law. This statement
+        does not claim that a particular law applies in every location.
+      </p>
+    </section>
+    <section class="plain-page-section">
+      <h2>Changes to this policy</h2>
+      <p>
+        If the site's data practices change, I will update this page and its
+        date. The <a href="/terms/">Terms</a> and
+        <a href="/disclosure/">Disclosure</a> pages explain related site
+        practices.
+      </p>
+    </section>
+    <p class="legal-updated">
+      Last updated <time datetime="2026-11-02">November 2, 2026</time>.
+    </p>
+  </main>
+</SiteLayout>

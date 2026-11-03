@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#d6d4d4"/>
+  <path d="M72 84h1056" stroke="#837f7f" stroke-width="2"/>
+  <path d="M72 546h1056" stroke="#837f7f" stroke-width="2"/>
+  <rect x="72" y="132" width="12" height="330" fill="#5a5455"/>
+  <text x="112" y="190" fill="#5a5455" font-family="Arial, sans-serif" font-size="22" letter-spacing="2">HADES · NOTES FROM THE DESK</text>
+  <text x="108" y="320" fill="#31292a" font-family="Georgia, serif" font-size="88" font-weight="700">Nether</text>
+  <text x="112" y="390" fill="#5a5455" font-family="Arial, sans-serif" font-size="28">Web development · AI in web dev · PC gear</text>
+  <text x="112" y="594" fill="#5a5455" font-family="Arial, sans-serif" font-size="18">HADES</text>
+</svg>

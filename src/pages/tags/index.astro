@@ -1,0 +1,24 @@
+---
+import TagCloud from "../../components/TagCloud.astro";
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import { getAllTags, getSitePosts } from "../../lib/posts";
+
+const posts = await getSitePosts();
+const tags = await getAllTags(posts);
+---
+
+<SiteLayout
+  title="Tags | Nether"
+  description="Browse tags used to group posts across the Nether archive."
+>
+  <main class="archive-page tags-page">
+    <header class="archive-header">
+      <a class="post-return" href="/blog/">
+        ← All posts
+      </a>
+      <h1>Tags</h1>
+      <p>I use tags to group notes that cross topic lanes.</p>
+    </header>
+    <TagCloud tags={tags} />
+  </main>
+</SiteLayout>

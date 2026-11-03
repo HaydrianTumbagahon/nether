@@ -1,0 +1,297 @@
+---
+import Cover from "../components/Cover.astro";
+import GearBanner from "../components/GearBanner.astro";
+import SiteLayout from "../layouts/SiteLayout.astro";
+import { site } from "../config/site";
+import { getIems, getKeyboards, getMice } from "../data/gear";
+import { formatDate, getPostSlug, getPublishedPosts } from "../lib/posts";
+
+const posts = await getPublishedPosts();
+const webPosts = posts.filter((post) => post.data.category === "web-development");
+const webPostPageSize = 5;
+const webPostPageCount = Math.ceil(webPosts.length / webPostPageSize);
+const leadPost =
+  posts.find((post) => post.data.featured && post.data.category === "web-development") ??
+  webPosts[0] ??
+  posts[0];
+const keyboards = getKeyboards();
+const mice = getMice();
+const iems = getIems();
+const cleanTitle = (title: string) => title.replace(/^TEST:\s*/i, "");
+const postHref = (post: (typeof posts)[number]) =>
+  `/blog/${getPostSlug(post)}/`;
+const featuredCategories = ["web-development"] as const;
+const categoryLabel = (category: (typeof featuredCategories)[number]) =>
+  site.categories.find((entry) => entry.slug === category)?.label ?? category;
+function seededIndex(date: string, category: string, length: number): number {
+  let hash = 2166136261;
+  for (const character of `${date}:${category}`) {
+    hash = Math.imul(hash ^ character.charCodeAt(0), 16777619) >>> 0;
+  }
+  return hash % length;
+}
+const featuredCandidates = Object.fromEntries(
+  featuredCategories.map((category) => [
+    category,
+    posts
+      .filter((post) => post.data.category === category)
+      .map((post) => ({
+        url: postHref(post),
+        title: cleanTitle(post.data.title),
+        description: post.data.description,
+        category: categoryLabel(category),
+        datetime: post.data.pubDate.toISOString(),
+        date: formatDate(post.data.pubDate),
+      })),
+  ]),
+);
+const featuredDate = new Date().toISOString().slice(0, 10);
+const featuredPosts = featuredCategories.flatMap((category) => {
+  const candidates = featuredCandidates[category];
+  return candidates.length > 0
+    ? [candidates[seededIndex(featuredDate, category, candidates.length)]]
+    : [];
+});
+---
+
+<SiteLayout
+  title="The Desk | Nether"
+  description={site.tagline}
+>
+  <main class="desk-home">
+    {leadPost && (
+      <section class="desk-lead" aria-labelledby="lead-title">
+        <div class="desk-lead-grid">
+          <div class="desk-lead-copy">
+            <h1 class="desk-lead-title" id="lead-title">
+              {cleanTitle(leadPost.data.title)}
+            </h1>
+            <p class="desk-lead-deck">{leadPost.data.description}</p>
+            <p class="desk-byline">
+              <time datetime={leadPost.data.pubDate.toISOString()}>
+                {formatDate(leadPost.data.pubDate)}
+              </time>
+            </p>
+            <a class="text-link" href={postHref(leadPost)}>
+              Read the story <span aria-hidden="true">→</span>
+            </a>
+          </div>
+          <a
+            class="desk-lead-cover"
+            href={postHref(leadPost)}
+            aria-label={`Read ${cleanTitle(leadPost.data.title)}`}
+            data-reveal="mask"
+          >
+            <Cover post={leadPost} aspect="portrait" loading="eager" />
+          </a>
+        </div>
+      </section>
+    )}
+
+    <section
+      aria-labelledby="featured-today-title"
+      class="featured-today"
+      data-featured-today
+      data-featured-date={featuredDate}
+      data-featured-candidates={JSON.stringify(featuredCandidates)}
+    >
+      <header class="featured-today-header">
+        <h2 id="featured-today-title">Featured today</h2>
+      </header>
+      <ol class="archive-post-list featured-today-list" data-featured-list>
+        {featuredPosts.map((post) => (
+          <li class="archive-post-row featured-today-row">
+            <a aria-label={`Read ${post.title}`} class="featured-post-card" href={post.url}>
+              <div class="archive-post-meta">
+                <span>{post.category}</span>
+                <time datetime={post.datetime}>{post.date}</time>
+              </div>
+              <h2>{post.title}</h2>
+              <p>{post.description}</p>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <div class="desk-lanes">
+      <section class="desk-lane" id="web-development" aria-labelledby="web-development-title">
+        <div class="desk-lane-grid">
+          <header class="desk-lane-intro">
+            <h2 id="web-development-title">Web Development</h2>
+            <p>Notes on the tools, techniques, browser features, and AI workflows I use to build for the web.</p>
+          </header>
+          <div class="desk-lane-content">
+            {webPosts.length > 0 ? (
+              <>
+                <div class="web-post-slider" data-web-post-slider>
+                  <div class="web-post-viewport" data-web-post-viewport>
+                    <ol class="changelog-list" data-web-post-list id="web-post-list">
+                      {webPosts.map((post) => (
+                        <li class="changelog-row" data-web-post>
+                          <a
+                            aria-label={`Read ${cleanTitle(post.data.title)}`}
+                            class="changelog-post-link"
+                            href={postHref(post)}
+                          >
+                            <time datetime={post.data.pubDate.toISOString()}>
+                              {formatDate(post.data.pubDate)}
+                            </time>
+                            <div>
+                              <h3>{cleanTitle(post.data.title)}</h3>
+                              <p>{post.data.description}</p>
+                            </div>
+                          </a>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                  {webPostPageCount > 1 && (
+                    <nav
+                      aria-label="Web Dev post pages"
+                      class="web-post-pagination"
+                      data-web-post-pagination
+                      hidden
+                    >
+                      {Array.from({ length: webPostPageCount }, (_, page) => {
+                        const firstTopic = page * webPostPageSize + 1;
+                        const lastTopic = Math.min(
+                          (page + 1) * webPostPageSize,
+                          webPosts.length,
+                        );
+                        return (
+                          <button
+                            aria-controls="web-post-list"
+                            aria-current={page === 0 ? "page" : undefined}
+                            aria-label={`Show topics ${firstTopic} to ${lastTopic}`}
+                            class="web-post-page-dot"
+                            data-web-post-page={page}
+                            type="button"
+                          ></button>
+                        );
+                      })}
+                    </nav>
+                  )}
+                </div>
+              </>
+            ) : (
+              <p class="empty-lane">I haven’t logged a web update yet.</p>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="gears-title" class="home-gears" id="gears">
+        <h2 id="gears-title">Gears</h2>
+        <div class="gear-banner-stack">
+          <GearBanner
+            ariaLabel="Browse keyboards"
+            href="/keyboards/"
+            hook="Ready to feel every keystroke?"
+            items={keyboards}
+            title="Keyboards"
+          />
+          <GearBanner
+            ariaLabel="Browse mice"
+            href="/mice/"
+            hook="Looking for your perfect grip?"
+            items={mice}
+            title="Mice"
+          />
+          <GearBanner
+            ariaLabel="Browse IEMs"
+            href="/iems/"
+            hook="Want to hear what premium sounds like?"
+            items={iems}
+            title="IEMs"
+          />
+        </div>
+      </section>
+    </div>
+  </main>
+  <script>
+    import "../scripts/desk";
+  </script>
+  <script is:inline>
+    (() => {
+      const section = document.querySelector("[data-featured-today]");
+      const list = section?.querySelector("[data-featured-list]");
+      if (!(section instanceof HTMLElement) || !(list instanceof HTMLOListElement)) return;
+
+      let candidates;
+      try {
+        candidates = JSON.parse(section.dataset.featuredCandidates ?? "{}");
+      } catch {
+        return;
+      }
+
+      const categories = ["web-development"];
+
+      function currentDate() {
+        const now = new Date();
+        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      }
+
+      function seededIndex(date, category, length) {
+        let hash = 2166136261;
+        for (const character of `${date}:${category}`) {
+          hash = Math.imul(hash ^ character.charCodeAt(0), 16777619) >>> 0;
+        }
+        return hash % length;
+      }
+
+      function createCard(post) {
+        const item = document.createElement("li");
+        item.className = "archive-post-row";
+        const meta = document.createElement("div");
+        meta.className = "archive-post-meta";
+
+        const category = document.createElement("span");
+        category.textContent = post.category;
+        const date = document.createElement("time");
+        date.dateTime = post.datetime;
+        date.textContent = post.date;
+        meta.append(category, date);
+
+        const heading = document.createElement("h2");
+        heading.textContent = post.title;
+
+        const description = document.createElement("p");
+        description.textContent = post.description;
+        const link = document.createElement("a");
+        link.className = "featured-post-card";
+        link.href = post.url;
+        link.setAttribute("aria-label", `Read ${post.title}`);
+        link.append(meta, heading, description);
+        item.append(link);
+        return item;
+      }
+
+      function updateFeatured() {
+        const date = currentDate();
+        const posts = categories
+          .map((category) => {
+            const choices = candidates[category] ?? [];
+            return choices.length > 0
+              ? choices[seededIndex(date, category, choices.length)]
+              : null;
+          })
+          .filter(Boolean);
+        list.replaceChildren(...posts.map(createCard));
+        section.dataset.featuredDate = date;
+      }
+
+      function updateAtMidnight() {
+        const now = new Date();
+        const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+        window.setTimeout(() => {
+          updateFeatured();
+          updateAtMidnight();
+        }, Math.max(100, midnight.getTime() - now.getTime() + 25));
+      }
+
+      updateFeatured();
+      updateAtMidnight();
+    })();
+  </script>
+</SiteLayout>

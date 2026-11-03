@@ -1,0 +1,128 @@
+---
+import { getCollection } from "astro:content";
+import Cover from "../components/Cover.astro";
+import SiteLayout from "../layouts/SiteLayout.astro";
+
+const posts = await getCollection("posts");
+const testPost = posts.find((post) =>
+  post.id.toLowerCase().includes("test-web-dev"),
+);
+
+if (!testPost)
+  throw new Error("The TEST web-dev post is required for the motion demo.");
+---
+
+<SiteLayout
+  title="Motion Test | Nether"
+  description="A private test page for checking motion treatments."
+  noindex
+>
+  <div
+    aria-label="Reading progress"
+    aria-valuemin="0"
+    aria-valuemax="100"
+    aria-valuenow="0"
+    class="fixed inset-x-0 top-0 z-50 h-1 bg-[var(--desk-accent)]"
+    data-reading-progress
+    role="progressbar"
+  ></div>
+  <main class="mx-auto max-w-4xl px-6 py-16 sm:px-10">
+    <header class="max-w-2xl border-b border-[var(--desk-line)] pb-10">
+      <h1 class="font-serif text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
+        Motion test
+      </h1>
+      <p class="mt-5 text-lg leading-relaxed text-[var(--desk-muted)]" data-reveal>
+        I use this page to check each motion treatment. The test artwork comes
+        from the local cover generator.
+      </p>
+    </header>
+
+    <div class="space-y-20 py-14">
+      <section aria-labelledby="reveal-title" class="max-w-2xl">
+        <h2 class="font-serif text-2xl font-semibold" id="reveal-title">
+          Fade and rise
+        </h2>
+        <p class="mt-4 leading-relaxed text-[var(--desk-muted)]" data-reveal="rise">
+          This paragraph fades in and moves upward a short distance when it
+          enters the viewport.
+        </p>
+      </section>
+
+      <section aria-labelledby="stagger-title" class="max-w-2xl">
+        <h2 class="font-serif text-2xl font-semibold" id="stagger-title">
+          Staggered list
+        </h2>
+        <ul class="mt-5 space-y-3" data-stagger>
+          <li class="border-l-2 border-[var(--desk-accent)] pl-4">
+            The first item enters.
+          </li>
+          <li class="border-l-2 border-[var(--desk-accent)] pl-4">
+            The next item follows.
+          </li>
+          <li class="border-l-2 border-[var(--desk-accent)] pl-4">
+            The last item completes the sequence.
+          </li>
+        </ul>
+      </section>
+
+      <section aria-labelledby="split-title" class="max-w-2xl">
+        <h2
+          class="font-serif text-2xl font-semibold"
+          data-split="words"
+          id="split-title"
+        >
+          Word by word
+        </h2>
+        <p class="mt-3 leading-relaxed text-[var(--desk-muted)]">
+          This heading reveals one word at a time.
+        </p>
+      </section>
+
+      <section aria-labelledby="line-title" class="max-w-md">
+        <h2
+          class="font-serif text-3xl font-semibold leading-tight"
+          data-split="lines"
+          id="line-title"
+        >
+          A line-by-line heading keeps its meaning clear.
+        </h2>
+        <p class="mt-3 leading-relaxed text-[var(--desk-muted)]">
+          If splitting cannot be measured, the heading stays intact and reveals
+          as plain text.
+        </p>
+      </section>
+
+      <section aria-labelledby="mask-title" class="max-w-2xl">
+        <h2 class="font-serif text-2xl font-semibold" id="mask-title">
+          Image mask reveal
+        </h2>
+        <div class="mt-5" data-reveal="mask">
+          <Cover post={testPost} />
+        </div>
+      </section>
+
+      <section aria-labelledby="parallax-title" class="max-w-2xl">
+        <h2 class="font-serif text-2xl font-semibold" id="parallax-title">
+          Subtle parallax
+        </h2>
+        <p class="mb-5 mt-3 leading-relaxed text-[var(--desk-muted)]">
+          The local artwork shifts only a few percent as I scroll past it.
+        </p>
+        <div data-parallax="0.03">
+          <Cover post={testPost} />
+        </div>
+      </section>
+
+      <section aria-labelledby="progress-title" class="max-w-2xl pb-24">
+        <h2 class="font-serif text-2xl font-semibold" id="progress-title">
+          Reading progress
+        </h2>
+        <p class="mt-3 leading-relaxed text-[var(--desk-muted)]">
+          The thin bar at the top follows this page from start to finish.
+          Reduced-motion mode skips the bar animation along with the other
+          effects.
+        </p>
+      </section>
+    </div>
+  </main>
+</SiteLayout>

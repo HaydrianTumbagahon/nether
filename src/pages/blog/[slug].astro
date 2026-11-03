@@ -1,0 +1,83 @@
+---
+import { getCollection, render } from "astro:content";
+import Aside from "../../components/Aside.astro";
+import Callout from "../../components/Callout.astro";
+import CodeBlock from "../../components/CodeBlock.astro";
+import ComparisonTable from "../../components/ComparisonTable.astro";
+import Figure from "../../components/Figure.astro";
+import ProsCons from "../../components/ProsCons.astro";
+import SpecTable from "../../components/SpecTable.astro";
+import PostLayout from "../../layouts/PostLayout.astro";
+
+export async function getStaticPaths() {
+  const entries = await getCollection("posts");
+  const posts = entries
+    .filter(
+      (post) => !post.data.draft || post.id.toLowerCase().includes("test"),
+    )
+    .sort(
+      (first, second) =>
+        second.data.pubDate.getTime() - first.data.pubDate.getTime(),
+    );
+
+  return posts.map((post, index) => {
+    const related = posts
+      .filter((candidate) => candidate.id !== post.id)
+      .map((candidate) => ({
+        candidate,
+        score:
+          Number(candidate.data.category === post.data.category) +
+          candidate.data.tags.filter((tag) => post.data.tags.includes(tag))
+            .length,
+      }))
+      .sort(
+        (first, second) =>
+          second.score - first.score ||
+          second.candidate.data.pubDate.getTime() -
+            first.candidate.data.pubDate.getTime(),
+      )
+      .map(({ candidate }) => candidate)
+      .slice(0, 3);
+
+    return {
+      params: {
+        slug: (post.id.split("/").at(-1) ?? post.id)
+          .replace(/\.mdx?$/i, "")
+          .toLowerCase(),
+      },
+      props: {
+        post,
+        previous: posts[index + 1],
+        next: posts[index - 1],
+        relatedPosts: related,
+      },
+    };
+  });
+}
+
+const { post, previous, next, relatedPosts } = Astro.props;
+const { Content, headings } = await render(post);
+---
+
+<PostLayout
+  post={post}
+  headings={headings}
+  previous={previous}
+  next={next}
+  relatedPosts={relatedPosts}
+>
+  <Content
+    components={{
+      Aside,
+      Callout,
+      CodeBlock,
+      ComparisonTable,
+      Figure,
+      ProsCons,
+      SpecTable,
+    }}
+  />
+</PostLayout>
+<script>
+  import "../../scripts/article";
+</script>

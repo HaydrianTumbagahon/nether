@@ -1,0 +1,17 @@
+---
+interface Props {
+  score: number;
+  handsOn: boolean;
+}
+
+const { score, handsOn } = Astro.props;
+const label = handsOn ? "My rating" : "Research score";
+---
+
+<span
+  aria-label={`${label}: ${score} out of 10`}
+  class="rating-badge"
+>
+  <span class="rating-badge-label">{label}</span>
+  <strong>{score}<span aria-hidden="true"> / 10</span></strong>
+</span>

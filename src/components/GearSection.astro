@@ -1,0 +1,44 @@
+---
+import type { GearItem } from "../data/gear/types";
+import BuyButtons from "./BuyButtons.astro";
+import RatingBadge from "./RatingBadge.astro";
+
+interface Props {
+  title: string;
+  description: string;
+  items: GearItem[];
+}
+
+const { title, description, items } = Astro.props;
+---
+
+<main class="archive-page gear-section-page">
+  <header class="archive-header">
+    <a class="post-return" href="/gear/">← Gear</a>
+    <h1>{title}</h1>
+    <p>{description}</p>
+  </header>
+
+  {items.length > 0 ? (
+    <ol class="gear-section-list">
+      {items.map((item) => (
+        <li class="gear-section-row">
+          <article class="gear-section-card">
+            <header class="gear-section-card-header">
+              <div>
+                <p class="gear-section-meta">{item.brand} · {item.tier}</p>
+                <h2>{item.name}</h2>
+              </div>
+              <RatingBadge score={item.score} handsOn={item.handsOn} />
+            </header>
+            <p class="gear-section-summary">{item.summary}</p>
+            <p class="gear-section-verdict">{item.verdictLine}</p>
+            <BuyButtons links={item.links} />
+          </article>
+        </li>
+      ))}
+    </ol>
+  ) : (
+    <p class="empty-lane">I haven’t filed anything in this section yet.</p>
+  )}
+</main>

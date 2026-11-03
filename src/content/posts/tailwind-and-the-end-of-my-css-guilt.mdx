@@ -1,0 +1,68 @@
+---
+title: "Tailwind and the End of My CSS Guilt"
+description: "How utility-first CSS works, how to keep its markup readable, and when a stylesheet is the better tool."
+pubDate: 2026-10-15
+category: web-development
+tags:
+  - Tailwind CSS
+  - CSS
+  - design systems
+---
+
+I used to dread styling. Every project turned into a sea of custom class names and specificity wars. Then I tried Tailwind properly — not just the “utility classes bad” stereotype — and something clicked. Suddenly I was designing in the browser instead of fighting the browser. This post is my honest love letter mixed with practical advice for other juniors who still feel guilty for “not writing real CSS.” I’ll show real before-and-after code from my own projects and explain when traditional CSS still wins.
+
+## What utility-first means
+
+Tailwind provides small classes for individual CSS declarations. A class such as `flex` sets `display: flex`; `gap-4` sets spacing; and `text-lg` chooses a type size from the configured scale. A group of utilities on an element describes its appearance close to its markup.
+
+The approach does not remove CSS. It changes where common declarations are expressed and encourages reuse through a shared token system. The browser still receives CSS, and developers still need to understand layout, inheritance, responsive behavior, and accessibility.
+
+Compare a small component written with a named class:
+
+```html
+<button class="save-button">Save</button>
+```
+
+```css
+.save-button {
+  padding: 0.75rem 1rem;
+  border-radius: 0.25rem;
+  background: #31292a;
+  color: #fff;
+}
+```
+
+With utilities, the same choices are visible on the element:
+
+```html
+<button class="rounded px-4 py-3">Save</button>
+```
+
+The exact classes and design tokens depend on the project configuration. A utility framework does not decide whether the result has good contrast or a useful focus state; those remain design decisions.
+
+## Keep markup readable
+
+Long class lists are a real trade-off. Group classes consistently: layout first, spacing next, then typography, colors, and interaction states. Use component boundaries for repeated structures. A `PrimaryButton` component can provide one consistent set of classes rather than copying the same list across many pages.
+
+Avoid creating a component for every element. Extract a pattern when it has a meaningful name, repeated use, or behavior that deserves one place to maintain. For a one-off decorative detail, a short local class may be clearer than an unwieldy utility string.
+
+Use the theme’s scales instead of arbitrary values everywhere. Shared spacing, colors, and type sizes make pages feel related and make later changes safer. If a utility value appears repeatedly, consider whether it should be a token or a component rule.
+
+## Let the browser guide the design
+
+Utility classes can shorten the loop between a visual adjustment and seeing it in context. Change a gap or grid definition, refresh, and compare the result at different widths. That quick feedback is useful only when the developer checks more than the default viewport. Test keyboard focus, text wrapping, and reduced motion as part of the same review.
+
+Responsive variants can express a layout change at a breakpoint, but they should follow content needs rather than device labels. Start with the smallest space, then add a column or wider measure when the content can use it. Do not hide important content merely to avoid adjusting the layout.
+
+## When traditional CSS is clearer
+
+A stylesheet is often a better fit for complex selectors, reusable animation, third-party markup, or a component with many related states. CSS custom properties are useful for theme values that change together. A dedicated class can also give a complicated visual treatment a concise name.
+
+The choice is not utility classes versus “real CSS.” Both are CSS authoring methods. Select the one that keeps the rule understandable and maintainable for the people working in the repository. A mixed approach is normal: utilities for common layout and spacing, components for repeated patterns, and CSS for rules that are awkward to express inline.
+
+## Key takeaways
+
+- Utility-first does not mean there is no design system.
+- Fast visual feedback helps when paired with responsive and accessibility checks.
+- Keep HTML readable with consistent class ordering and meaningful components.
+- Use traditional CSS when selectors, states, or visual rules become clearer there.

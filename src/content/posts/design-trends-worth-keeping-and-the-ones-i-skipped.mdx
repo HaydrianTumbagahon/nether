@@ -1,0 +1,60 @@
+---
+title: "Design Trends Worth Keeping (and the Ones I Skipped)"
+description: "Evaluate motion, typography, color systems, and visual trends by their effect on clarity, access, and maintenance."
+pubDate: 2026-10-30
+category: web-development
+tags:
+  - web design
+  - accessibility
+  - CSS
+---
+
+Not every trend deserves your time. I’ll walk through the ones that genuinely improved the sites I built (meaningful motion, better typography, thoughtful color systems) and the ones that just added complexity without joy. Written from the perspective of someone who still has limited hours and wants maximum impact.
+
+## Judge a trend by the task it serves
+
+A visual technique is useful when it helps people understand content, find an action, or maintain context. Before adopting one, describe what changes for the user. If the only answer is that a screenshot may look more current, the trend may not be worth the implementation and maintenance cost.
+
+The same technique can be helpful in one context and distracting in another. Motion can show that a panel opened, but long movement can delay access to its content. A decorative effect may make a portfolio distinctive, while making an information-heavy page harder to scan. Evaluate the actual page and audience rather than treating a trend as universally good or bad.
+
+## Keep motion purposeful
+
+Small transitions can clarify state changes when they are quick and do not block interaction. A reveal can guide attention to a new section, but the content must remain available when animation is disabled or fails. Respect reduced-motion preferences:
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  .panel {
+    scroll-behavior: auto;
+    animation: none;
+    transition: none;
+  }
+}
+```
+
+Use motion to communicate a meaningful relationship, not as a requirement for reaching content. Test with keyboard and touch, and make sure animated elements do not cause layout shifts or obscure nearby text.
+
+## Invest in typography and color roles
+
+Readable typography is durable because it supports the content rather than competing with it. Establish a clear heading and body scale, line length, and spacing rhythm. Check the result with real text, including long headings and small screens; a type pairing that looks good in a short mockup may fail with actual content.
+
+A color system should use semantic roles such as page, surface, primary text, muted text, border, and accent. This makes theme changes and contrast checks easier. Do not select colors only because a palette is popular. Verify each text/background pairing and ensure status is not communicated by color alone.
+
+## Be cautious with visual complexity
+
+Effects that layer blur, shadow, motion, and decorative backgrounds can make text harder to read and code harder to maintain. New layout patterns should not hide familiar navigation or controls. Dense animations can also increase performance costs, especially on lower-powered devices.
+
+These are not blanket bans. A visual treatment can be appropriate when it has a clear job, remains accessible, and works across viewports. Build a small example and test it with real content before applying it everywhere. If removing the effect improves clarity, it was not serving the page.
+
+## Choose intentionally with limited time
+
+Prioritize fixes by user impact: readable text, working navigation, responsive layout, visible focus, and clear content structure come before decorative polish. Keep a short record of why a special effect or component exists. That makes it easier to maintain the design when a library changes or a new page needs a different treatment.
+
+Good design does not require adopting every new technique. A steady foundation gives a site room to use a trend where it helps and leave it out where it does not. Restraint is an active choice, not a lack of skill.
+
+When reviewing a new visual idea, check it in the context where it will be used. Test keyboard operation, narrow layouts, zoomed text, and reduced motion rather than judging only the default screenshot. Compare the page with and without the effect. If the feature makes the hierarchy clearer or helps explain a state, keep it and document its purpose. If it only adds another dependency or visual layer, postpone it until a real need appears.
+
+## Key takeaways
+
+- Trends should serve the user, not the portfolio.
+- Restraint is a design skill.
+- Clear typography, accessible color, and sound structure age well.

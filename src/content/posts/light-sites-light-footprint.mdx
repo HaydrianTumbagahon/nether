@@ -1,0 +1,48 @@
+---
+title: "Light Sites, Light Footprint"
+description: "Reduce unnecessary page weight with careful image, font, JavaScript, and measurement choices."
+pubDate: 2026-10-07
+category: web-development
+tags:
+  - web performance
+  - sustainability
+  - optimization
+---
+
+Performance and sustainability turned out to be the same conversation. Lighter sites load faster, cost less to host, and feel better to use. This post covers the practical habits I adopted that improved both metrics without requiring senior-level knowledge.
+
+## Start by measuring a real page
+
+Choose a representative route and inspect it with browser performance tools under repeatable conditions. Look at transfer size, request count, render-blocking resources, and how the page behaves on a slower connection or device. Field data can show what real users experience; lab tools can help isolate causes. Each answers a different question, so keep the context with the result.
+
+Avoid optimizing from file size alone. A large image above the fold can delay the main content, while a smaller script may block interaction. Identify what users wait for and what resources cause that wait, then focus on the relevant bottleneck.
+
+## Give images dimensions and appropriate sizes
+
+Images often account for a substantial portion of page weight. Use an image pipeline to generate dimensions and formats suited to the display area. Provide width and height so the browser can reserve space before the file loads. Use responsive sources when the same image appears at very different sizes.
+
+Load below-the-fold images lazily, but do not lazy-load the main image a visitor sees immediately. Compress assets with visual quality in mind, and avoid sending a desktop-sized image to a small card when a smaller rendition will do. Decorative illustrations should also have a purpose; unused images still require transfer and decoding.
+
+## Be deliberate with fonts and JavaScript
+
+Every font file adds bytes and may delay text rendering. Use a limited set of weights, subset language ranges only when appropriate, and set a fallback stack. Consider whether a remote font is necessary for the design. Make sure text remains readable while custom fonts load.
+
+JavaScript can add parsing, execution, and maintenance costs. Prefer native browser features for simple interactions, split code that is not needed immediately, and avoid shipping a library for one small effect. Check whether a script is actually used on the route before including it globally. Do not remove essential behavior just to reduce a score; measure the effect and offer an accessible alternative.
+
+## Reduce waste without harming the experience
+
+An efficient site can reduce transferred data and repeated work, but the total environmental impact depends on devices, networks, hosting, caching, and energy sources. Avoid claiming a precise carbon reduction without a trustworthy method and evidence. Focus on changes you can verify: fewer unnecessary resources, effective caching, appropriately sized media, and a page that remains usable on modest connections.
+
+Use static rendering or caching where it fits the content and freshness requirements. Avoid automatic refresh loops and heavy third-party embeds when they do not serve the user. Revisit old assets and scripts as the product changes; unused code often remains simply because no one checks whether it is still needed.
+
+## Make measurement part of the workflow
+
+Record the route, device conditions, and tool used when comparing changes. Repeat measurements when possible and look for the experience of key tasks, not just one summary score. Check keyboard behavior and visual quality after optimization. A technically smaller page is not an improvement if it removes necessary information or makes controls harder to use.
+
+After changing an asset or script, inspect the network panel again and verify the page under the same conditions as before. Check that responsive images select an appropriate source and that cached resources update as intended. Keep the original file available until the replacement has been reviewed; aggressive compression can create visible artifacts that outweigh a small transfer reduction.
+
+## Key takeaways
+
+- Every unnecessary transfer has a cost, even when the exact impact varies.
+- Images and fonts are good places to inspect first, not automatic culprits.
+- Measurement makes optimization concrete and helps avoid guesswork.

@@ -1,0 +1,90 @@
+---
+interface Props {
+  url?: string;
+  alt: string;
+  caption?: string;
+  sourcePage?: string;
+  variant?: "detail" | "graph";
+}
+
+const {
+  url,
+  alt,
+  caption,
+  sourcePage,
+  variant = "detail",
+} = Astro.props;
+
+let safeUrl: string | undefined;
+let safeSourcePage: string | undefined;
+if (url) {
+  try {
+    const parsedUrl = new URL(url);
+    if (parsedUrl.protocol === "https:") safeUrl = parsedUrl.href;
+  } catch {
+    safeUrl = undefined;
+  }
+}
+if (sourcePage) {
+  try {
+    const parsedUrl = new URL(sourcePage);
+    if (parsedUrl.protocol === "https:") safeSourcePage = parsedUrl.href;
+  } catch {
+    safeSourcePage = undefined;
+  }
+}
+---
+
+<figure class:list={["iem-remote-figure", `iem-remote-figure-${variant}`]}>
+  <div class="iem-remote-media" data-iem-remote-media>
+    {safeUrl ? (
+      <>
+        <img
+          alt={alt}
+          data-iem-remote-image
+          decoding="async"
+          loading="lazy"
+          src={safeUrl}
+        />
+        <div class="iem-image-fallback" data-iem-image-fallback hidden>
+          <span>Image unavailable</span>
+        </div>
+      </>
+    ) : (
+      <div class="iem-image-fallback">
+        <span>{url ? "Only secure remote images can be shown." : "No image supplied"}</span>
+      </div>
+    )}
+  </div>
+  {(caption || safeSourcePage) && (
+    <figcaption>
+      {caption}
+      {caption && safeSourcePage && " · "}
+      {safeSourcePage && (
+        <a href={safeSourcePage} rel="noopener noreferrer" target="_blank">
+          Image source
+        </a>
+      )}
+    </figcaption>
+  )}
+</figure>
+
+<script>
+  function showImageFallback(event: Event): void {
+    const image = event.target;
+    if (
+      !(image instanceof HTMLImageElement) ||
+      !image.matches("[data-iem-remote-image]")
+    ) {
+      return;
+    }
+
+    image.hidden = true;
+    const fallback = image.parentElement?.querySelector<HTMLElement>(
+      "[data-iem-image-fallback]",
+    );
+    if (fallback) fallback.hidden = false;
+  }
+
+  document.addEventListener("error", showImageFallback, true);
+</script>

@@ -1,0 +1,23 @@
+---
+import SearchIsland from "../components/SearchIsland";
+import SiteLayout from "../layouts/SiteLayout.astro";
+
+const initialQuery = Astro.url.searchParams.get("q")?.slice(0, 300) ?? "";
+---
+
+<SiteLayout
+  title="Search | Nether"
+  description="Search Nether product data, published articles, and selected site pages."
+>
+  <main class="archive-page plain-page">
+    <header class="archive-header">
+      <h1>Search</h1>
+      <p>Search products, articles, and site pages across Nether.</p>
+    </header>
+    <SearchIsland
+      client:load
+      embedded
+      initialQuery={initialQuery}
+    />
+  </main>
+</SiteLayout>

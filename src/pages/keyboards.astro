@@ -1,0 +1,48 @@
+---
+import GearDialogController from "../components/GearDialogController.astro";
+import GearGrid from "../components/GearGrid.astro";
+import SiteLayout from "../layouts/SiteLayout.astro";
+import { getKeyboards } from "../data/gear";
+import { keyboardBrands } from "../data/gear/keyboards";
+import type { GearItem } from "../data/gear/types";
+
+const keyboards = getKeyboards();
+const filters = [
+  {
+    key: "type",
+    label: "Type",
+    getValues: (item: GearItem) => item.kind === "keyboard" ? [item.switches.type] : [],
+  },
+  {
+    key: "layout",
+    label: "Layout",
+    getValues: (item: GearItem) => item.kind === "keyboard" ? [item.layout] : [],
+  },
+  {
+    key: "connectivity",
+    label: "Connectivity",
+    getValues: (item: GearItem) => item.kind === "keyboard"
+      ? item.connectivity
+      : [],
+  },
+];
+---
+
+<SiteLayout
+  title="Keyboards | Nether"
+  description="Mechanical keyboard notes, reviews, and buying guidance from HADES."
+>
+  <main class="archive-page keyboard-page">
+    <header class="archive-header keyboard-page-header">
+      <a class="post-return" href="/gear/">← Gear</a>
+      <h1>Keyboards</h1>
+      <p>
+        I compare mechanical keyboards by layout, feel, features, and the
+        trade-offs that matter at a desk.
+      </p>
+    </header>
+
+    <GearGrid brands={keyboardBrands} filters={filters} items={keyboards} listId="keyboard-products" />
+  </main>
+  <GearDialogController />
+</SiteLayout>

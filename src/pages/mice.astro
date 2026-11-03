@@ -1,0 +1,41 @@
+---
+import GearDialogController from "../components/GearDialogController.astro";
+import GearGrid from "../components/GearGrid.astro";
+import SiteLayout from "../layouts/SiteLayout.astro";
+import { getMice } from "../data/gear";
+import { mouseBrands } from "../data/gear/mice";
+import type { GearItem } from "../data/gear/types";
+
+const mice = getMice();
+const filters = [
+  {
+    key: "type",
+    label: "Type",
+    getValues: (item: GearItem) => item.kind === "mouse" ? [item.formFactor] : [],
+  },
+  {
+    key: "connectivity",
+    label: "Connectivity",
+    getValues: (item: GearItem) => item.kind === "mouse" ? item.connectivity : [],
+  },
+];
+---
+
+<SiteLayout
+  title="Mice | Nether"
+  description="Mouse and pointing-device notes, reviews, and buying guidance from HADES."
+>
+  <main class="archive-page mice-page">
+    <header class="archive-header mice-page-header">
+      <a class="post-return" href="/gear/">← Gear</a>
+      <h1>Mice</h1>
+      <p>
+        I compare mice and pointing devices by shape, controls, and how they
+        fit the work or play they are meant to support.
+      </p>
+    </header>
+
+    <GearGrid brands={mouseBrands} filters={filters} items={mice} listId="mouse-products" />
+  </main>
+  <GearDialogController />
+</SiteLayout>

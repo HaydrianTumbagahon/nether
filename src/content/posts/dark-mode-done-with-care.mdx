@@ -1,0 +1,84 @@
+---
+title: "Dark Mode, Done With Care"
+description: "Build a theme toggle that respects system preferences, persists choices, and keeps text contrast readable."
+pubDate: 2026-10-21
+category: web-development
+tags:
+  - CSS
+  - accessibility
+  - theming
+---
+
+I used to think dark mode was just a trendy toggle. Then I implemented it properly on my own site and watched people actually smile when they switched it on. This post covers the technical approach I finally settled on (CSS variables + system preference + manual override), the accessibility mistakes I made at first, and the small details that turn “it works” into “this feels premium.” Written for juniors who want their projects to feel considered.
+
+## Define roles before colors
+
+Do not build a dark theme by inverting every color. Define roles such as page background, surface, primary text, muted text, border, and accent. Assign a light value and a dark value to each role, then use those variables throughout the interface.
+
+```css
+:root {
+  color-scheme: light;
+  --page: #ffffff;
+  --surface: #f3f3f3;
+  --text: #222222;
+  --muted: #555555;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #222222;
+  --surface: #333333;
+  --text: #f4f4f4;
+  --muted: #c4c4c4;
+}
+```
+
+Components can then use `var(--page)` and `var(--text)` rather than carrying separate theme logic. This makes later palette changes easier and reduces the chance that one page remains stuck in the old colors.
+
+## Respect the system, allow a choice
+
+When no saved choice exists, start from the operating system preference. A manual selection should override that default and persist across visits. Read storage defensively, because browser privacy settings can make it unavailable. Apply the theme early enough to avoid showing one palette briefly before switching to another.
+
+The basic decision is simple:
+
+```js
+const saved = localStorage.getItem("theme");
+const systemPrefersDark = matchMedia("(prefers-color-scheme: dark)").matches;
+const theme = saved ?? (systemPrefersDark ? "dark" : "light");
+document.documentElement.dataset.theme = theme;
+```
+
+Production code should validate the stored value and handle storage errors. The toggle should be a real button with a clear accessible name and state. Changing its visible label alone is not enough if assistive technology cannot tell what action it performs.
+
+## Check contrast and states
+
+Text contrast is not optional in either theme. Verify normal text against its actual background, including muted text and links. Also check focus indicators, disabled controls, form errors, selected states, code samples, and dialog backdrops. A pair that works in light mode may become unreadable when reused on a dark surface.
+
+Do not use color as the only signal. A selected tab can have a border or shape change; an error should include explanatory text; and focus should remain visible without relying on hover. Test with keyboard navigation and a contrast checker after the final colors are set.
+
+## Use transitions carefully
+
+A short transition on color and background can make a theme change feel coherent, but a transition on every property can make the interface sluggish. Avoid animating layout, and respect reduced-motion preferences:
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
+}
+```
+
+If the interface has no useful transition, an immediate change is better than adding motion for decoration. Test the first page paint, stored preference, system default, and manual override. A careful theme is a complete interface state, not just a darker background.
+
+## Verify the preference flow
+
+Test the theme from a clean browser context so an old saved choice does not hide the system default. Set the operating system to light, load the page without a stored preference, and confirm the light variables are active. Repeat with dark mode. Then select a theme manually, reload, and confirm that choice remains selected even if the system preference differs. Check another page in the same site, because a preference that works on one route but disappears on navigation is not persistent in practice. Finally, clear the saved value and confirm the system choice is used again. This short sequence checks the default, override, persistence, and reset behavior without relying on appearance alone.
+
+## Key takeaways
+
+- Respect the user’s operating system setting until they choose otherwise.
+- Use CSS variables for semantic color roles and persist manual preference.
+- Check contrast and interaction states in both themes.
+- Keep transitions restrained and honor reduced-motion preferences.

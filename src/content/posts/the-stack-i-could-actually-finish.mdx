@@ -1,0 +1,52 @@
+---
+title: "The Stack I Could Actually Finish"
+description: "A practical framework for choosing a small, maintainable web development stack and making steady progress."
+pubDate: 2026-10-12
+category: web-development
+tags:
+  - web development
+  - learning
+  - JavaScript
+---
+
+When I graduated, everyone kept asking “What stack do you know?” and I felt this weird pressure to pick something impressive. The truth is, the happiest decision I made was choosing something I could actually finish projects with instead of something that looked cool on LinkedIn. In this post I walk through how I landed on a simple but modern stack (HTML/CSS + JavaScript + one framework), the emotional rollercoaster of second-guessing myself, and why starting smaller actually made me progress faster. I’ll share the exact decision framework I now use and the red flags that still trip up new grads.
+
+## Start with the project, not the trend
+
+A stack is a set of tools that work together. For a small website, that might mean HTML for structure, CSS for presentation, JavaScript for behavior, and a framework only when the project benefits from its component model or rendering options. A tool is not automatically valuable because a job listing mentions it or a tutorial uses it.
+
+Write down what the project needs before choosing tools. Does it mostly publish articles? Does it have interactive forms or a complex dashboard? Will several people work on it? Does it need a server, or can it be delivered as static files? Those answers narrow the options. If ordinary browser features solve the problem, avoid adding a framework merely to make the repository look more advanced.
+
+## Build the layers in order
+
+Start with semantic HTML. It gives the page structure and works without a framework. Add CSS for layout, typography, and responsive behavior. Add JavaScript where users need an interaction. A framework can then help organize repeated UI or manage changing state, but it does not replace understanding those layers.
+
+For example, a basic navigation link needs no JavaScript:
+
+```html
+<nav aria-label="Main">
+  <a href="/articles/">Articles</a>
+</nav>
+```
+
+If a control changes content without navigating, JavaScript may be appropriate. If several parts of a page depend on the same state, a component framework may make that relationship easier to manage. Choose it for that reason, not because every page needs an application runtime.
+
+## Use a short decision framework
+
+Compare a few candidate stacks against the same questions: Can I build the essential feature with it? Can I explain how its main pieces fit together? Is its documentation current? Can I deploy it using tools I can access? Does it add a service, dependency, or maintenance task the project does not need?
+
+Make a tiny prototype before committing. Build one representative page and one interaction. That exposes missing knowledge earlier than a large setup does. Keep the prototype disposable: its purpose is to answer a question, not become a polished product.
+
+When two choices appear equally suitable, prefer the one with fewer moving parts. A smaller dependency set is easier to update and debug. It also leaves more time for accessibility, content, and testing, which are often postponed when setup becomes the project.
+
+## Recognize the traps
+
+Frequent stack changes are a warning sign. So is adding a database, a state library, or a build plugin before you can name the requirement it serves. Tutorials can also create false urgency: a technique being popular does not make it necessary for the current task.
+
+Keep a list of ideas you are postponing. If a real need appears later, evaluate the tool then. This is not a permanent rejection; it is a way to avoid solving hypothetical problems with real complexity. Learn one framework deeply enough to understand its data flow, routing, and build output before starting another.
+
+## Key takeaways
+
+- Happiness compounds when you ship.
+- Complexity is the enemy of momentum.
+- One solid stack beats three half-learned ones.

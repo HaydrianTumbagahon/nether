@@ -1,0 +1,30 @@
+---
+import { site } from "../config/site";
+import SearchIsland from "./SearchIsland";
+---
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a aria-label={`${site.name} home`} class="site-wordmark" href="/">
+      {site.name}
+    </a>
+    <div class="site-header-actions">
+      <SearchIsland client:load />
+      <button
+        aria-label="Switch to dark theme"
+        aria-pressed="false"
+        class="theme-toggle"
+        data-theme-toggle
+        type="button"
+      >
+        <svg aria-hidden="true" class="theme-icon" data-theme-moon viewBox="0 0 24 24">
+          <path d="M20.2 15.1A8.5 8.5 0 0 1 8.9 3.8 8.6 8.6 0 1 0 20.2 15.1Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" />
+        </svg>
+        <svg aria-hidden="true" class="theme-icon theme-icon-hidden" data-theme-sun viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.7" />
+          <path d="M12 2.5v2M12 19.5v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2.5 12h2m15 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.7" />
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>

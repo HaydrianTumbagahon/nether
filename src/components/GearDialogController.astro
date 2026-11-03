@@ -1,0 +1,153 @@
+<script>
+  const body = document.body;
+  let activeDialog: HTMLDialogElement | undefined;
+  let activeTrigger: HTMLElement | undefined;
+  let lockedScrollY = 0;
+  let previousRootOverflow: string | undefined;
+  let previousRootScrollBehavior: string | undefined;
+  let previousBodyStyles: {
+    overflow: string;
+    paddingRight: string;
+  } | undefined;
+  const closeTimers = new WeakMap<HTMLDialogElement, number>();
+
+  function lockPageScroll() {
+    lockedScrollY = window.scrollY;
+    previousBodyStyles = {
+      overflow: body.style.overflow,
+      paddingRight: body.style.paddingRight,
+    };
+    previousRootOverflow = document.documentElement.style.overflow;
+    previousRootScrollBehavior = document.documentElement.style.scrollBehavior;
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    const bodyPaddingRight = Number.parseFloat(window.getComputedStyle(body).paddingRight) || 0;
+    document.documentElement.style.overflow = "hidden";
+    body.style.overflow = "hidden";
+    if (scrollbarWidth > 0) {
+      body.style.paddingRight = `${bodyPaddingRight + scrollbarWidth}px`;
+    }
+  }
+
+  function restorePageScroll() {
+    if (!previousBodyStyles) return;
+    Object.assign(body.style, previousBodyStyles);
+    previousBodyStyles = undefined;
+    document.documentElement.style.overflow = previousRootOverflow ?? "";
+    previousRootOverflow = undefined;
+    document.documentElement.style.scrollBehavior = "auto";
+    window.scrollTo(0, lockedScrollY);
+    document.documentElement.style.scrollBehavior = previousRootScrollBehavior ?? "";
+    previousRootScrollBehavior = undefined;
+  }
+
+  function finishClose(dialog: HTMLDialogElement, restoreFocus: boolean) {
+    const timer = closeTimers.get(dialog);
+    if (timer !== undefined) window.clearTimeout(timer);
+    closeTimers.delete(dialog);
+    dialog.removeAttribute("data-closing");
+    if (dialog.open) dialog.close();
+
+    if (activeDialog === dialog) {
+      restorePageScroll();
+      activeDialog = undefined;
+      const trigger = activeTrigger;
+      activeTrigger = undefined;
+      if (restoreFocus && trigger?.isConnected) trigger.focus({ preventScroll: true });
+    }
+  }
+
+  function closeDialog(dialog: HTMLDialogElement, restoreFocus = true) {
+    if (!dialog.open) return;
+    dialog.dataset.closing = "true";
+    const timer = window.setTimeout(
+      () => finishClose(dialog, restoreFocus),
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 1 : 180,
+    );
+    closeTimers.set(dialog, timer);
+  }
+
+  function openDialogFromUrl() {
+    const itemId = new URLSearchParams(window.location.search).get("item");
+    if (!itemId) return;
+
+    const trigger = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-gear-item-id]"),
+    ).find((element) => element.dataset.gearItemId === itemId);
+    trigger?.click();
+  }
+
+  document.addEventListener("astro:page-load", openDialogFromUrl);
+  openDialogFromUrl();
+
+  document.addEventListener("click", (event) => {
+    if (!(event.target instanceof Element)) return;
+    const openButton = event.target.closest<HTMLElement>("[data-gear-dialog-open]");
+    if (openButton) {
+      const dialogId = openButton.dataset.gearDialogOpen;
+      const dialog = dialogId
+        ? document.getElementById(dialogId)
+        : null;
+      if (!(dialog instanceof HTMLDialogElement) || dialog.open) return;
+
+      activeTrigger = openButton;
+      activeDialog = dialog;
+      lockPageScroll();
+      dialog.showModal();
+      const scrollContent = dialog.querySelector<HTMLElement>("[data-gear-dialog-content]");
+      if (scrollContent) scrollContent.scrollTop = 0;
+      dialog.querySelector<HTMLButtonElement>("[data-gear-dialog-close]")?.focus();
+      return;
+    }
+
+    const closeButton = event.target.closest<HTMLElement>("[data-gear-dialog-close]");
+    const dialog = closeButton?.closest("dialog[data-gear-dialog]");
+    if (dialog instanceof HTMLDialogElement) closeDialog(dialog);
+  });
+
+  document.addEventListener("click", (event) => {
+    if (event.target instanceof HTMLDialogElement && event.target.matches("[data-gear-dialog]")) {
+      closeDialog(event.target);
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (!(event.target instanceof Element)) return;
+    const dialog = event.target.closest<HTMLDialogElement>("dialog[data-gear-dialog][open]");
+    if (!dialog) return;
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeDialog(dialog);
+      return;
+    }
+
+    if (event.key !== "Tab") return;
+    const focusable = Array.from(
+      dialog.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ),
+    ).filter((element) => !element.hidden);
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (!first || !last) {
+      event.preventDefault();
+      dialog.querySelector<HTMLButtonElement>("[data-gear-dialog-close]")?.focus();
+    } else if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  });
+
+  document.addEventListener("cancel", (event) => {
+    if (!(event.target instanceof HTMLDialogElement) || !event.target.matches("[data-gear-dialog]")) return;
+    event.preventDefault();
+    closeDialog(event.target);
+  });
+
+  document.addEventListener("astro:before-swap", () => {
+    if (activeDialog) finishClose(activeDialog, false);
+  });
+</script>

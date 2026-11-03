@@ -1,0 +1,57 @@
+---
+title: "AI Tools That Taught Me Instead of Typing for Me"
+description: "A learning-first way to use coding assistants for explanations, debugging, and review without outsourcing understanding."
+pubDate: 2026-10-18
+category: web-development
+tags:
+  - AI tools
+  - learning
+  - code review
+---
+
+When AI coding tools exploded, I felt both excited and slightly terrified — like I was cheating. Then I realized the best ones don’t replace thinking; they amplify the thinking you’re already doing. I’ll share the exact tools and workflows that helped me go from “stuck for hours” to “I understand this better now,” including how I use them without becoming dependent. Honest talk about the days they made me worse and the habits that fixed it.
+
+## Ask for a lesson, not just an answer
+
+A coding assistant can produce code quickly, but a code block alone may leave the important question unanswered: why does this solve the problem? Give it the relevant context, describe what you expected, and ask for an explanation before asking for a patch. For example:
+
+```text
+Explain why this function returns undefined for an empty list.
+Walk through the control flow without rewriting the code.
+Then suggest one small test that would confirm the explanation.
+```
+
+This keeps the task grounded in observable behavior. The assistant may still be wrong, so compare its explanation with the language documentation and the code you can run.
+
+## Debug in small steps
+
+Start with the exact error, the smallest relevant function, and what you have already tried. Avoid pasting unrelated files or secrets. Ask for likely causes ranked by evidence, not a complete rewrite. Then test one hypothesis at a time.
+
+For a failing test, ask the assistant to trace the inputs and outputs. For an unfamiliar API, ask what assumptions the example makes about browser support, runtime, and data shape. For a review, request edge cases and failure modes. These prompts create useful questions without transferring responsibility for the result.
+
+Keep changes narrow. If a suggested fix touches many unrelated files, ask why each change is needed. A smaller patch is easier to understand, verify, and undo if the explanation does not hold.
+
+## Treat generated code as a proposal
+
+Read every line before accepting it. Check types, input boundaries, error handling, accessibility, and whether the code matches the project’s existing conventions. Run the relevant tests and inspect the diff. Passing a test does not prove that the code is correct for every input, but it gives evidence for the specific behavior tested.
+
+Do not paste credentials, private customer data, or confidential source into a service unless its terms and your organization’s rules permit it. Remove unrelated context before sharing a problem. The same care applies to generated output: it can contain insecure patterns, unsupported APIs, or made-up package names.
+
+## Notice when assistance is making learning worse
+
+If you repeatedly accept answers you cannot explain, stop and work through one example manually. Ask the tool to quiz you on a concept or compare two approaches without choosing for you. Then implement the simplest version yourself and use the assistant to review specific questions.
+
+A useful measure is not the amount of code produced. It is whether you can describe the behavior, spot a defect, and maintain the result later. If an answer creates more review work than it saves, change the task or leave the tool out of that step.
+
+## Build a repeatable workflow
+
+Write down the goal, constraints, and expected behavior. Ask for an explanation or test idea. Make the smallest change, run the focused check, and inspect what changed. When the result is wrong, share the failure and ask for another hypothesis rather than prompting for a larger rewrite.
+
+This approach uses an assistant as a patient source of explanations, but keeps judgment with the developer. It also makes learning visible: each task ends with a reasoned change rather than an unexplained block of generated code.
+
+## Key takeaways
+
+- AI can act like a tireless pair programmer, but its output still needs review.
+- Do not accept code you cannot explain.
+- Ask for explanations, hypotheses, edge cases, and tests rather than only solutions.
+- Use small, verifiable tasks to keep learning in the loop.

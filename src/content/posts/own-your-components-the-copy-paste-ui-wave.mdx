@@ -1,0 +1,52 @@
+---
+title: "Own Your Components: The Copy-Paste UI Wave"
+description: "Compare headless, package-based, and source-owned UI components to balance speed, accessibility, and control."
+pubDate: 2026-10-17
+category: web-development
+tags:
+  - UI components
+  - React
+  - design systems
+---
+
+I got tired of fighting opinionated frameworks. Discovering headless and copy-paste component approaches (shadcn/ui style) felt like freedom. This post explains why this model clicks so well for juniors who want both speed and control.
+
+## Understand the three approaches
+
+A packaged component library is installed as a dependency and updated through its release process. It can provide consistent defaults quickly, but customization may depend on the options and extension points the package exposes.
+
+A headless library focuses on behavior and accessibility primitives while leaving visual styling to the application. This gives developers control of the appearance, but they still need to provide the design and test the resulting states.
+
+A copy-paste approach places component source code in the project. A shadcn/ui-style workflow is an example of this model: the application takes ownership of copied components and can change them directly. It reduces dependence on a runtime package for those components, but updates and maintenance become the project’s responsibility.
+
+## Source ownership is not free maintenance
+
+Having source in the repository makes customization possible. It does not guarantee that the component is accessible, secure, or easy to update. Review the code, understand its dependencies, and test the behaviors you rely on. If a component uses a separate primitive library, that dependency still has its own update and versioning needs.
+
+For a menu or dialog, check keyboard behavior, focus handling, labels, escape behavior, and mobile interaction. A visual change can accidentally remove a focus style or hide a disabled state. Keep local modifications understandable so future updates can be compared rather than pasted over them blindly.
+
+## Start with a small set
+
+Choose components that solve repeated interface needs: buttons, inputs, dialogs, or menus. Add only the variants the product uses. A primary button can share consistent focus and disabled styling, while a form field can keep its label and error relationship together.
+
+Avoid collecting components before the application needs them. A large catalog creates decisions and maintenance work. Start with one pattern, use it on a real page, and note what needs to be configurable. If the component is used once and has no shared behavior, ordinary markup may be simpler.
+
+## Keep the design system coherent
+
+Components should use the project’s design tokens for color, spacing, typography, and radius. This lets a theme or brand adjustment flow through the system. Keep semantic roles such as primary action, surface, and muted text rather than embedding unrelated colors in every copied file.
+
+Document only the props and behaviors that matter: available variants, required labels, keyboard expectations, and how to add a state. A short example is often more useful than extensive documentation. The aim is to help another developer use the component correctly without reading every implementation detail first.
+
+## Choose based on your constraints
+
+Use a package when shared updates and a stable API are valuable. Use headless primitives when behavior is useful but the visual system must remain custom. Copy source when direct ownership and local adaptation are worth maintaining. These approaches can also coexist, but avoid using several overlapping libraries for the same kind of control.
+
+Full customization does not mean every component needs a rewrite. Preserve useful defaults, change only what the product requires, and keep upstream notes if you expect to compare future updates. Learning the underlying HTML, focus, and interaction patterns makes any of these choices more effective.
+
+Before adopting a component, review its source and dependencies, then test one normal state and one edge state. For a button, that could include keyboard focus and disabled behavior; for a dialog, opening, closing, and focus return. This small review helps distinguish a polished preview from a component that is ready to own in the application.
+
+## Key takeaways
+
+- You can have useful defaults and still customize owned source.
+- Copying source can reduce package lock-in, but maintenance becomes yours.
+- Learning accessible primitives makes component work stronger.

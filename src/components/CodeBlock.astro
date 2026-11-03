@@ -1,0 +1,12 @@
+---
+interface Props {
+  filename: string;
+}
+
+const { filename } = Astro.props;
+---
+
+<figure class="code-sample" data-code-filename={filename}>
+  <figcaption>{filename}</figcaption>
+  <slot />
+</figure>

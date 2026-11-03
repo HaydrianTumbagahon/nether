@@ -1,0 +1,22 @@
+---
+interface Props {
+  specs: Record<string, string>;
+  caption?: string;
+}
+
+const { specs, caption = "Specifications" } = Astro.props;
+---
+
+<div class="table-scroll">
+  <table class="spec-table">
+    <caption>{caption}</caption>
+    <tbody>
+      {Object.entries(specs).map(([name, value]) => (
+        <tr>
+          <th scope="row">{name}</th>
+          <td>{value}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>

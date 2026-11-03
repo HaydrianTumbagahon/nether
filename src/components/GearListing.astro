@@ -1,0 +1,67 @@
+---
+import type { CollectionEntry } from "astro:content";
+import Cover from "./Cover.astro";
+import { formatDate, getPostSlug } from "../lib/posts";
+
+interface Props {
+  posts: CollectionEntry<"posts">[];
+}
+
+const { posts } = Astro.props;
+const cleanTitle = (title: string) => title.replace(/^TEST:\s*/i, "");
+---
+
+{posts.length > 0 ? (
+  <ul class="gear-listing">
+    {posts.map((post) => (
+      <li>
+        <article class="gear-listing-item">
+          <a
+            class="gear-listing-cover"
+            href={`/blog/${getPostSlug(post)}/`}
+            aria-label={`Read ${post.data.review?.productName ?? cleanTitle(post.data.title)}`}
+          >
+            <Cover post={post} />
+          </a>
+          <div class="gear-listing-copy">
+            <p class="gear-listing-meta">
+              <span>{post.data.format}</span>
+              <time datetime={post.data.pubDate.toISOString()}>
+                {formatDate(post.data.pubDate)}
+              </time>
+            </p>
+            <h2>
+              <a href={`/blog/${getPostSlug(post)}/`}>
+                {post.data.review?.productName ?? cleanTitle(post.data.title)}
+              </a>
+            </h2>
+            <p>{post.data.description}</p>
+            {post.data.review && (
+              <p class="gear-listing-rating">
+                <span class="rating-marks" aria-hidden="true">
+                  {Array.from({ length: 10 }, (_, index) => (
+                    <span
+                      class:list={[
+                        "rating-mark",
+                        index < post.data.review!.rating * 2 && "is-filled",
+                      ]}
+                    ></span>
+                  ))}
+                </span>
+                <span class="sr-only">
+                  Rated {post.data.review.rating} out of 5
+                </span>
+                <span>
+                  {post.data.review.rating.toFixed(1)} / 5 ·{" "}
+                  {post.data.review.priceRange}
+                </span>
+              </p>
+            )}
+          </div>
+        </article>
+      </li>
+    ))}
+  </ul>
+) : (
+  <p class="empty-lane">I haven’t filed anything in this section yet.</p>
+)}

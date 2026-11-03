@@ -1,0 +1,80 @@
+---
+title: "Server Components, Finally Explained"
+description: "Understand React Server Components, client boundaries, and when interactive UI belongs in a client component."
+pubDate: 2026-10-22
+category: web-development
+tags:
+  - React
+  - Server Components
+  - Next.js
+---
+
+When Server Components first appeared I nodded along in tutorials and then got completely lost trying to use them. After several failed attempts, the mental model finally clicked. Here’s the explanation I wish I had received as a junior, plus the practical patterns that actually work in real projects.
+
+## Start with where the component runs
+
+In React’s App Router, Server Components are the default for components in the app directory unless a client boundary is introduced. They render on the server as part of the server-rendered result. They can read server-side data and keep server-only dependencies out of the browser bundle, but they cannot use browser APIs, event handlers, or client-only React state and effects.
+
+The important distinction is not “HTML versus JavaScript.” It is which environment owns a component’s work. A Server Component can prepare data and render markup. A Client Component is needed for behavior that runs in the browser, such as a button with local state or an event listener.
+
+## Understand the client boundary
+
+The `"use client"` directive marks a client entry point. Put it at the top of a file that needs browser interaction, then import that component into a Server Component:
+
+```jsx
+"use client";
+
+import { useState } from "react";
+
+export function ExpandButton() {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <button onClick={() => setExpanded(!expanded)}>
+      {expanded ? "Show less" : "Show more"}
+    </button>
+  );
+}
+```
+
+The directive does not mean every descendant needs its own directive. Modules imported beneath a client entry point become part of the client-side dependency graph. Keep that boundary near the interactive feature so static content and server-only work do not move into the browser unnecessarily.
+
+Client Components can still contribute to server-rendered HTML on the initial request and are then hydrated so their event handlers work. Server Components do not hydrate as interactive React components. This distinction helps explain why a page may show a button before its client JavaScript has loaded.
+
+## Compose the two kinds of component
+
+A Server Component can load data and pass serializable values into an interactive child:
+
+```jsx
+import { ExpandButton } from "./expand-button";
+
+export default async function ArticlePage() {
+  const article = await getArticle();
+  return (
+    <article>
+      <h1>{article.title}</h1>
+      <p>{article.summary}</p>
+      <ExpandButton />
+    </article>
+  );
+}
+```
+
+Here `getArticle` represents the application’s own data function. Keep credentials and server-only objects on the server; pass only the values the client needs. Ordinary function values cannot cross the boundary as props, although framework features such as Server Actions have their own rules and should be learned separately.
+
+## Choose the boundary by behavior
+
+Use a Server Component for content that can be rendered from server-side data without browser interaction. Use a Client Component when the UI needs state, effects, event handlers, or browser APIs. A client boundary can be small: an interactive control can sit inside a largely server-rendered page.
+
+Common mistakes include adding `"use client"` to a whole route for one button, importing a server-only module into client code, and trying to read `window` during server rendering. Move browser-only behavior into an effect or an event handler in a client component. If a component only needs data, prefer the server data path rather than fetching it again after hydration.
+
+## Build the mental model incrementally
+
+When learning the App Router, first identify which code runs on the server and which code must run in the browser. Then follow the props across that boundary and check which values are serializable. Add interaction only where the product needs it. This keeps the architecture understandable and makes client bundle growth easier to reason about.
+
+Server Components are not a replacement for every Client Component, nor do they make a site automatically faster or safer. They offer a way to place rendering and data work in the appropriate environment. The useful skill is drawing the boundary deliberately.
+
+## Key takeaways
+
+- Not every component needs to be a Client Component.
+- The server/client boundary is the key concept; keep it close to browser interaction.
+- Start with the App Router mental model and follow data across the boundary.

@@ -1,0 +1,45 @@
+---
+import { getCollection } from "astro:content";
+import PostList from "../../components/PostList.astro";
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import { site } from "../../config/site";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("posts");
+  const visiblePosts = posts.filter(
+    (post) => !post.data.draft || post.id.toLowerCase().includes("test"),
+  );
+
+  return site.categories.map((category) => ({
+    params: { slug: category.slug },
+    props: {
+      category,
+      posts: visiblePosts
+        .filter((post) => post.data.category === category.slug)
+        .sort(
+          (first, second) =>
+            second.data.pubDate.getTime() - first.data.pubDate.getTime(),
+        ),
+    },
+  }));
+}
+
+const { category, posts } = Astro.props;
+---
+
+<SiteLayout
+  title={`${category.label} Posts | ${site.name}`}
+  description={category.description}
+>
+  <main class="archive-page category-page">
+    <header class="archive-header">
+      <a class="post-return" href="/blog/">
+        ← All posts
+      </a>
+      <h1>{category.label}</h1>
+      <p>{category.description}</p>
+      <p>{category.introduction}</p>
+    </header>
+    <PostList posts={posts} showCategory={false} />
+  </main>
+</SiteLayout>

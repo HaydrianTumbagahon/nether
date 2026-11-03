@@ -1,0 +1,95 @@
+---
+import GearDetails from "./GearDetails.astro";
+import type { GearItem } from "../data/gear/types";
+
+interface Props {
+  item: GearItem;
+  sortFields: Record<string, string>;
+  filterFields: Record<string, string[]>;
+}
+
+const { item, sortFields, filterFields } = Astro.props;
+const dialogId = `gear-details-${item.id}`;
+const primaryImage = item.images?.[0];
+const itemAttributes = {
+  "data-sort-item": "",
+  ...Object.fromEntries(
+    Object.entries(sortFields).map(([key, value]) => [`data-sort-${key}`, value]),
+  ),
+  ...Object.fromEntries(
+    Object.entries(filterFields).map(([key, values]) => [`data-filter-${key}`, values.join("|")]),
+  ),
+};
+
+---
+
+<li class="keyboard-grid-item gear-grid-item" {...itemAttributes}>
+  <article class="keyboard-card">
+    <button
+      aria-controls={dialogId}
+      aria-haspopup="dialog"
+      aria-label={`View details for ${item.brand} ${item.name}: ${item.summary}`}
+      class="gear-preview-trigger keyboard-preview-trigger"
+      data-gear-dialog-open={dialogId}
+      data-gear-item-id={item.id}
+      type="button"
+    >
+      <span class="keyboard-card-media gear-card-media">
+        {primaryImage ? (
+          <img
+            alt={primaryImage.alt.trim() || `${item.brand} ${item.name}`}
+            decoding="async"
+            height="450"
+            loading="lazy"
+            src={primaryImage.url}
+            width="800"
+          />
+        ) : (
+          <span
+            aria-label={`No product image supplied for ${item.brand} ${item.name}`}
+            class="keyboard-image-empty"
+            role="img"
+          >
+            No product image supplied
+          </span>
+        )}
+      </span>
+      <span class="keyboard-card-content gear-card-content">
+        <span class="keyboard-card-brand">{item.brand}</span>
+        <span class="keyboard-card-name">{item.name}</span>
+        <span class="keyboard-card-hook">{item.summary}</span>
+      </span>
+    </button>
+  </article>
+
+  <dialog
+    aria-labelledby={`${dialogId}-title`}
+    aria-modal="true"
+    class="gear-dialog-backdrop"
+    data-gear-dialog
+    id={dialogId}
+    role="dialog"
+  >
+    <section class="gear-detail-dialog gear-shared-detail-dialog">
+      <header class="gear-dialog-heading">
+        <button
+          aria-label={`Close ${item.brand} ${item.name} details`}
+          class="gear-dialog-close"
+          data-gear-dialog-close
+          type="button"
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8" />
+          </svg>
+        </button>
+        <p>{item.brand} · {item.tier}</p>
+        <h2 id={`${dialogId}-title`}>{item.name}</h2>
+        <p>{item.summary}</p>
+      </header>
+
+      <div class="gear-dialog-content" data-gear-dialog-content data-lenis-prevent>
+        <GearDetails item={item} />
+      </div>
+    </section>
+  </dialog>
+</li>

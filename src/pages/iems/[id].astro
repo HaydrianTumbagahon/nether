@@ -1,0 +1,29 @@
+---
+import IemDetails from "../../components/IemDetails.astro";
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import { getIems } from "../../data/gear";
+import type { Iem } from "../../data/gear/types";
+
+export function getStaticPaths() {
+  return getIems().map((iem) => ({
+    params: { id: iem.id },
+    props: { iem },
+  }));
+}
+
+interface Props {
+  iem: Iem;
+}
+
+const { iem } = Astro.props;
+---
+
+<SiteLayout
+  title={`${iem.brand} ${iem.name} | IEMs | Nether`}
+  description={iem.summary}
+>
+  <main class="archive-page iem-detail-page">
+    <a class="post-return" href="/iems/">← All IEMs</a>
+    <IemDetails iem={iem} />
+  </main>
+</SiteLayout>

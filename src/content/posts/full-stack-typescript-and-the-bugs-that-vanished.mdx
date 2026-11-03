@@ -1,0 +1,82 @@
+---
+title: "Full-Stack TypeScript and the Bugs That Vanished"
+description: "Share TypeScript contracts across frontend and backend code while validating incoming data at runtime."
+pubDate: 2026-10-31
+category: web-development
+tags:
+  - TypeScript
+  - API design
+  - validation
+---
+
+Sharing types between frontend and backend removed an entire category of bugs I used to create. The learning curve was real, but the confidence boost was bigger. This post is the practical onboarding guide I needed when I first tried it.
+
+## Start with a shared contract
+
+When a browser and server describe the same request differently, errors can appear at the boundary: a field may be missing, a value may use the wrong shape, or a name may drift during a change. Shared TypeScript types let both sides refer to one declared contract during development.
+
+Keep the contract in a module that both projects can import without pulling server-only code into the browser. A simple input type might be:
+
+```ts
+export interface CreateNoteInput {
+  title: string;
+  body: string;
+}
+```
+
+The frontend can use that shape when constructing a request, and the server can use it when working with validated data. This helps the compiler flag mismatched property names and incompatible values before the code runs.
+
+## Remember that types disappear at runtime
+
+TypeScript checks code during development and compilation, but its type annotations are erased from the JavaScript output. A request from a browser, a script, or another service does not become trustworthy because the frontend used a TypeScript interface. The server must validate the actual received value.
+
+A runtime schema can describe the input and produce a TypeScript type from the same definition:
+
+```ts
+import { z } from "zod";
+
+export const CreateNoteSchema = z.object({
+  title: z.string().min(1).max(120),
+  body: z.string().max(5000),
+});
+
+export type CreateNoteInput = z.infer<typeof CreateNoteSchema>;
+```
+
+The schema checks data at runtime; the inferred type helps TypeScript understand the validated result. Use validation at the server boundary, then pass the parsed value into application logic rather than trusting a cast such as `request.json() as CreateNoteInput`.
+
+## Validate before using the request
+
+The server should handle invalid JSON and invalid field values as separate failure cases. A simplified route might look like this:
+
+```ts
+const raw: unknown = await request.json();
+const parsed = CreateNoteSchema.safeParse(raw);
+
+if (!parsed.success) {
+  return Response.json({ error: "Invalid request" }, { status: 400 });
+}
+
+const note = await saveNote(parsed.data);
+return Response.json(note, { status: 201 });
+```
+
+Production code should also catch malformed JSON and apply authorization, size limits, and other endpoint-specific checks. Validation answers whether data has the expected shape; it does not decide whether a user is allowed to perform an action or whether a value is safe for every downstream use.
+
+## Share carefully across project boundaries
+
+In a single repository, a small shared package or folder can hold contracts. Keep dependencies in that module suitable for both environments. Do not import database clients, filesystem utilities, secrets, or server configuration into browser-facing code just to reuse a type.
+
+For separately versioned services, shared types can become stale. Publish or generate the contract through a deliberate process, and make compatibility expectations clear. If one side deploys before the other, consider whether an older client can still send a valid request. Types do not negotiate API versions by themselves.
+
+## Use types to clarify, not overpromise
+
+Types reduce uncertainty within the codebase, but they do not prove that the program has no bugs. Tests still need to cover meaningful behavior, and runtime validation remains necessary at external boundaries. Avoid reaching for `any` to silence a mismatch; use `unknown` for untrusted data and narrow it with validation.
+
+Start with one request-response path. Define its input and output, validate the input, and keep the client and server using the same contract. Once that path is easy to understand, apply the pattern where duplication or drift is a real problem. A small, consistent boundary is more useful than a complex type framework no one can maintain.
+
+## Key takeaways
+
+- Type safety can reduce uncertainty, but it does not replace runtime checks.
+- Start with a shared contract in a module both sides can safely import.
+- Validate external data with a runtime schema before using it.

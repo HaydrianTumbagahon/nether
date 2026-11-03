@@ -1,0 +1,57 @@
+---
+title: "Accessibility Stopped Being Homework"
+description: "A practical accessibility baseline covering semantic HTML, keyboard operation, names, contrast, and useful testing."
+pubDate: 2026-10-19
+category: web-development
+tags:
+  - accessibility
+  - semantic HTML
+  - testing
+---
+
+I’ll be honest — at first accessibility felt like extra work that slowed me down. Then I watched a screen-reader user navigate a site I had made accessible and something shifted. This post shares the practical techniques that give the biggest impact for the least effort, written by someone who still catches himself forgetting alt text.
+
+## Start with semantic HTML
+
+Native elements already communicate purpose and behavior. Use a button for an action, a link for navigation, headings in a meaningful hierarchy, and landmarks such as `main` and `nav` to organize a page. A clickable `div` does not automatically gain keyboard interaction, focus behavior, or the expected role of a button.
+
+```html
+<main>
+  <h1>Account settings</h1>
+  <button type="button">Save changes</button>
+</main>
+```
+
+Prefer the built-in element before adding ARIA. ARIA can supply missing names or states, but incorrect ARIA can make an interface harder to understand. Keep it synchronized with the actual behavior.
+
+## Make every action work by keyboard
+
+Use Tab and Shift+Tab to reach controls, Enter to follow links or activate buttons, and Space for buttons and checkboxes. Keep focus visible. When opening a dialog, move focus into it, keep keyboard focus within it while it is modal, close it on the expected command, and return focus to the control that opened it.
+
+Do not create a keyboard trap. Users should be able to reach and leave every interactive region. Custom menus, tabs, and comboboxes have additional interaction patterns; use a well-tested accessible primitive when their behavior is more complex than ordinary controls.
+
+## Give controls clear names
+
+Every input needs a label that describes its purpose. An inline hint is not a lasting substitute because it disappears as the user types. Group related controls with `fieldset` and `legend` when that relationship matters. Associate validation errors with the relevant field and announce important status changes without moving focus unexpectedly.
+
+Images need context-aware alternative text. Describe the information that the image contributes. If an image is purely decorative and adds no meaning, use an empty alt attribute so assistive technology can skip it. Avoid writing file names or adding descriptions that repeat nearby text without purpose.
+
+## Check visual access
+
+Text must remain readable against its background. Check ordinary text, muted labels, links, focus rings, error messages, and disabled states. Do not rely on color alone to communicate status; pair color with text, shape, or an icon with an accessible name.
+
+Allow text to resize and reflow. Avoid fixed-height containers that clip enlarged text, and test narrow screens with long labels. Respect reduced-motion preferences for animations that move, flash, or repeatedly draw attention. These checks are easier when considered while building a component than after a page is complete.
+
+## Test with more than one tool
+
+Start with keyboard-only navigation and inspect the page at a narrow width. Browser accessibility panels and automated checkers can catch missing names, invalid attributes, and some contrast issues. They cannot tell whether instructions make sense or whether a real task is understandable.
+
+Use a screen reader to learn how headings, landmarks, and controls are announced. Testing with people who use assistive technology provides feedback that automated tools cannot supply. Do not treat one successful test as proof that every page and interaction works; repeat checks when shared components or content change.
+
+For a form, a focused check can include whether every field has a visible label, whether required status is communicated, whether an invalid value produces a useful explanation, and whether that explanation is connected to its field. For a dialog, check that focus enters, stays within, and returns from the dialog. Keeping these checks tied to a specific task makes accessibility part of routine review rather than a separate final phase.
+
+## Key takeaways
+
+- Semantic HTML handles much of the foundation.
+- Keyboard navigation benefits users and clarifies interaction design.
+- Test with real browser and assistive-technology tools, then fix what they reveal.
