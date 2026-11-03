@@ -5,7 +5,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self' https:; script-src 'self' 'wasm-unsafe-eval' 'sha256-UIrFqcaitjA3OKa9mHKajg3N+0Y7tW9+y0o3QmMFeZQ=' 'sha256-1BvDVWLr3QCC20uHhUDi27eDFVJpk1uMQJGIWKUks2I=' 'sha256-DzL+o8sl+20OwCBRHXlebiEsQXO1zNLIE2XaVb7GCeE=' 'sha256-zq7y5UlYT4JkebYMTjPpyrTxlFnkt4FIVr7hbxUFa/Q=' 'sha256-1BU5dIGgphn2PvMGQqGAXQDomGT+FJ/N4bC+NKlwZ4A='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https:; worker-src 'self' blob:; upgrade-insecure-requests",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self' https:; script-src 'self' 'wasm-unsafe-eval' 'sha256-UIrFqcaitjA3OKa9mHKajg3N+0Y7tW9+y0o3QmMFeZQ=' 'sha256-1BvDVWLr3QCC20uHhUDi27eDFVJpk1uMQJGIWKUks2I=' 'sha256-DzL+o8sl+20OwCBRHXlebiEsQXO1zNLIE2XaVb7GCeE=' 'sha256-zq7y5UlYT4JkebYMTjPpyrTxlFnkt4FIVr7hbxUFa/Q=' 'sha256-1BU5dIGgphn2PvMGQqGAXQDomGT+FJ/N4bC+NKlwZ4A='; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://cdn.shopify.com https://resource.logitech.com https://resource.logitechg.com https://assets2.razerzone.com https://fantech.ph; font-src 'self' data:; connect-src 'self' https:; worker-src 'self' blob:; upgrade-insecure-requests"
         },
         {
           "key": "X-Content-Type-Options",
