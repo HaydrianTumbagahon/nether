@@ -1,6 +1,8 @@
 ---
+import { Image } from "astro:assets";
 import GearDetails from "./GearDetails.astro";
 import type { GearItem } from "../data/gear/types";
+import { getLocalProductImage } from "../lib/productImages";
 
 interface Props {
   item: GearItem;
@@ -11,6 +13,10 @@ interface Props {
 const { item, sortFields, filterFields } = Astro.props;
 const dialogId = `gear-details-${item.id}`;
 const primaryImage = item.images?.[0];
+const productName = item.name.toLocaleLowerCase().startsWith(`${item.brand.toLocaleLowerCase()} `)
+  ? item.name
+  : `${item.brand} ${item.name}`;
+const localImage = primaryImage ? undefined : getLocalProductImage(item);
 const itemAttributes = {
   "data-sort-item": "",
   ...Object.fromEntries(
@@ -28,7 +34,7 @@ const itemAttributes = {
     <button
       aria-controls={dialogId}
       aria-haspopup="dialog"
-      aria-label={`View details for ${item.brand} ${item.name}: ${item.summary}`}
+      aria-label={`View details for ${productName}: ${item.summary}`}
       class="gear-preview-trigger keyboard-preview-trigger"
       data-gear-dialog-open={dialogId}
       data-gear-item-id={item.id}
@@ -37,20 +43,23 @@ const itemAttributes = {
       <span class="keyboard-card-media gear-card-media">
         {primaryImage ? (
           <img
-            alt={primaryImage.alt.trim() || `${item.brand} ${item.name}`}
+            alt={primaryImage.alt.trim() || productName}
             decoding="async"
             height="450"
             loading="lazy"
             src={primaryImage.url}
             width="800"
           />
+        ) : localImage ? (
+          <Image alt={productName} loading="lazy" src={localImage} />
         ) : (
           <span
-            aria-label={`No product image supplied for ${item.brand} ${item.name}`}
+            aria-label={`${productName}. Photo coming soon`}
             class="keyboard-image-empty"
             role="img"
           >
-            No product image supplied
+            <span>{productName}</span>
+            <span>Photo coming soon</span>
           </span>
         )}
       </span>
@@ -73,7 +82,7 @@ const itemAttributes = {
     <section class="gear-detail-dialog gear-shared-detail-dialog">
       <header class="gear-dialog-heading">
         <button
-          aria-label={`Close ${item.brand} ${item.name} details`}
+          aria-label={`Close ${productName} details`}
           class="gear-dialog-close"
           data-gear-dialog-close
           type="button"

@@ -44,7 +44,7 @@ const sortOptions = [
           brand: item.brand,
           name: item.name,
           price: item.pricePhp?.min === undefined ? "" : String(item.pricePhp.min),
-          score: String(item.score),
+          score: item.score === undefined ? "" : String(item.score),
         }}
       />
     ))}

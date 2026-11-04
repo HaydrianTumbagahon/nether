@@ -25,7 +25,8 @@ type Base = {
   good: string[];
   annoying: string[];
   insight: string[]; // each string is one short paragraph
-  score: number; // 0 to 10
+  score?: number; // 0 to 10
+  ratingReason?: string;
   handsOn: boolean; // false = paper score
   verdict: Verdict;
   verdictLine: string;

@@ -43,8 +43,10 @@ if (sourcePage) {
           alt={alt}
           data-iem-remote-image
           decoding="async"
+          height={variant === "graph" ? "675" : "600"}
           loading="lazy"
           src={safeUrl}
+          width={variant === "graph" ? "1200" : "800"}
         />
         <div class="iem-image-fallback" data-iem-image-fallback hidden>
           <span>Image unavailable</span>

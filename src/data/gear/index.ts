@@ -36,7 +36,9 @@ function validateGear(): void {
     if (!brandsByKind[item.kind].has(item.brand)) {
       throw new Error(`${where}: brand "${item.brand}" does not exactly match its ${item.kind} brand list`);
     }
-    if (!(item.score >= 0 && item.score <= 10)) throw new Error(`${where}: score must be 0 to 10`);
+    if (item.score !== undefined && !(item.score >= 0 && item.score <= 10)) {
+      throw new Error(`${where}: score must be 0 to 10`);
+    }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(item.updated)) throw new Error(`${where}: updated must be YYYY-MM-DD`);
     for (const [store, url] of Object.entries(item.links ?? {})) {
       if (url && !url.startsWith('https://')) throw new Error(`${where}: ${store} link must be https`);
@@ -68,7 +70,13 @@ function prepare<T extends GearItem>(items: T[]): T[] {
     .map((item) => item.links === undefined
       ? { ...item, links: createStoreLinks(item.brand, item.name) }
       : item)
-    .sort((a, b) => (b.score === a.score ? a.name.localeCompare(b.name) : b.score - a.score));
+    .sort((a, b) => {
+      if (a.score === undefined || b.score === undefined) {
+        if (a.score === b.score) return a.name.localeCompare(b.name);
+        return a.score === undefined ? 1 : -1;
+      }
+      return b.score === a.score ? a.name.localeCompare(b.name) : b.score - a.score;
+    });
 }
 
 export const getKeyboards = (): Keyboard[] => prepare(keyboards);

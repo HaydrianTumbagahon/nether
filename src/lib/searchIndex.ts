@@ -142,7 +142,8 @@ function flattenGearItem(item: GearItem): SearchEntry {
     item.verdict,
     item.verdictLine,
     ...item.bestFor,
-    `Rating ${item.score} out of 10`,
+    item.score === undefined ? "Not rated yet" : `Rating ${item.score.toFixed(1)} out of 10`,
+    ...(item.ratingReason ? [item.ratingReason] : []),
     item.handsOn ? "Hands-on assessment" : "Research score based on specifications and reviewer consensus",
     ...specs,
   ].join(" ");

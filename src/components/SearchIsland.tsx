@@ -190,7 +190,11 @@ function SearchResultList({
                     onMouseEnter={() => onHover(resultIndex)}
                     role="option"
                   >
-                    <span aria-hidden={!result.entry.image} className="search-result-thumbnail-slot">
+                    <span
+                      aria-hidden={!result.entry.image}
+                      className="search-result-thumbnail-slot"
+                      data-product-image={result.entry.type === "keyboard" || result.entry.type === "mouse" || result.entry.type === "iem" ? "" : undefined}
+                    >
                       {result.entry.image ? (
                         <img
                           alt={result.entry.imageAlt ?? ""}

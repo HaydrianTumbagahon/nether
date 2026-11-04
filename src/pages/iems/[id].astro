@@ -16,10 +16,13 @@ interface Props {
 }
 
 const { iem } = Astro.props;
+const productName = iem.name.toLocaleLowerCase().startsWith(`${iem.brand.toLocaleLowerCase()} `)
+  ? iem.name
+  : `${iem.brand} ${iem.name}`;
 ---
 
 <SiteLayout
-  title={`${iem.brand} ${iem.name} | IEMs | Nether`}
+  title={`${productName} | IEMs | Nether`}
   description={iem.summary}
 >
   <main class="archive-page iem-detail-page">

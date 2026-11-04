@@ -1,8 +1,10 @@
 ---
+import { Image } from "astro:assets";
 import BuyButtons from "./BuyButtons.astro";
 import IemRemoteMedia from "./IemRemoteMedia.astro";
 import RatingBadge from "./RatingBadge.astro";
 import type { GearItem } from "../data/gear/types";
+import { getLocalProductImage } from "../lib/productImages";
 
 interface Props {
   item: GearItem;
@@ -60,6 +62,10 @@ const specRows = Object.entries(item)
   .filter(([key]) => !excludedFields.has(key))
   .flatMap(([key, value]) => detailRows(key, value));
 const imageItems = item.images ?? [];
+const localImage = imageItems.length > 0 ? undefined : getLocalProductImage(item);
+const productName = item.name.toLocaleLowerCase().startsWith(`${item.brand.toLocaleLowerCase()} `)
+  ? item.name
+  : `${item.brand} ${item.name}`;
 const graphs = item.kind === "iem" ? item.graphs ?? [] : [];
 const graphItems = graphs.flatMap((graph) => {
   try {
@@ -82,15 +88,17 @@ const graphItems = graphs.flatMap((graph) => {
   )}
 
   <div class="iem-detail-layout">
-    <section aria-label={`Images of ${item.brand} ${item.name}`} class="iem-detail-gallery gear-dialog-gallery">
+    <section aria-label={`Images of ${productName}`} class="iem-detail-gallery gear-dialog-gallery">
       {imageItems.length > 0 ? (
         imageItems.map((image) => (
           <figure>
             <img
-              alt={image.alt.trim() || `${item.brand} ${item.name}`}
+              alt={image.alt.trim() || productName}
               decoding="async"
+              height="600"
               loading="lazy"
               src={image.url}
+              width="800"
             />
             {(image.credit || image.sourcePage) && (
               <figcaption>
@@ -103,10 +111,17 @@ const graphItems = graphs.flatMap((graph) => {
             )}
           </figure>
         ))
+      ) : localImage ? (
+        <figure>
+          <Image alt={productName} loading="lazy" src={localImage} />
+        </figure>
       ) : (
-        <div class="keyboard-image-empty" role="img" aria-label={`No product image supplied for ${item.brand} ${item.name}`}>
-          No product image supplied
-        </div>
+        <figure class="gear-product-image-placeholder">
+          <div class="keyboard-image-empty" role="img" aria-label={`${productName}. Photo coming soon`}>
+            <span>{productName}</span>
+            <span>Photo coming soon</span>
+          </div>
+        </figure>
       )}
     </section>
 
@@ -160,6 +175,7 @@ const graphItems = graphs.flatMap((graph) => {
 
       <section aria-label="Rating and review" class="iem-detail-section gear-dialog-section gear-shared-insight">
         <RatingBadge score={item.score} handsOn={item.handsOn} />
+        {item.ratingReason && <p>{item.ratingReason}</p>}
         <div>
           <h3>Insight</h3>
           {item.insight.map((paragraph) => <p>{paragraph}</p>)}

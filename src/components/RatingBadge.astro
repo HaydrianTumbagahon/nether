@@ -1,17 +1,20 @@
 ---
 interface Props {
-  score: number;
+  score?: number;
   handsOn: boolean;
 }
 
 const { score, handsOn } = Astro.props;
-const label = handsOn ? "My rating" : "Research score";
+const label = score === undefined ? "Rating" : handsOn ? "My rating" : "Research score";
 ---
 
 <span
-  aria-label={`${label}: ${score} out of 10`}
+  aria-label={score === undefined ? "Not rated yet" : `${label}: ${score.toFixed(1)} out of 10`}
   class="rating-badge"
 >
   <span class="rating-badge-label">{label}</span>
-  <strong>{score}<span aria-hidden="true"> / 10</span></strong>
+  <strong>
+    {score === undefined ? "Not rated yet" : score.toFixed(1)}
+    {score !== undefined && <span aria-hidden="true"> / 10</span>}
+  </strong>
 </span>
